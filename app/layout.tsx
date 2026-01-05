@@ -34,27 +34,30 @@ export default function RootLayout({
   return (
     <ClerkProvider
       appearance={{
-        variables: {
-          colorPrimary: "oklch(0.922 0 0)",
-          colorBackground: "oklch(0.145 0 0)",
-          colorText: "oklch(0.985 0 0)",
-          colorInputBackground: "oklch(0.205 0 0)",
-          colorInputText: "oklch(0.985 0 0)",
-        },
         elements: {
           formButtonPrimary:
             "bg-primary text-primary-foreground hover:bg-primary/90",
-          card: "bg-card text-card-foreground",
+          card: "bg-card text-card-foreground border-border",
           headerTitle: "text-foreground",
           headerSubtitle: "text-muted-foreground",
           socialButtonsBlockButton:
-            "bg-secondary text-secondary-foreground hover:bg-secondary/90",
+            "bg-secondary text-secondary-foreground hover:bg-secondary/90 border border-input",
+          socialButtonsBlockButtonText: "text-secondary-foreground",
           formFieldLabel: "text-foreground",
           formFieldInput:
-            "bg-input text-foreground border-border focus:ring-ring",
+            "bg-background text-foreground border-input focus:ring-ring",
           footerActionLink: "text-primary hover:text-primary/90",
           identityPreviewText: "text-foreground",
           identityPreviewEditButton: "text-primary",
+          formFieldInputShowPasswordButton: "text-muted-foreground hover:text-foreground",
+          formHeaderTitle: "text-foreground",
+          formHeaderSubtitle: "text-muted-foreground",
+          formResendCodeLink: "text-primary hover:text-primary/90",
+          identityPreviewEditButtonIcon: "text-primary",
+          formFieldAction: "text-primary hover:text-primary/90",
+          footerActionText: "text-muted-foreground",
+          otpCodeFieldInput: "bg-background text-foreground border-input",
+          formFieldSuccessText: "text-foreground",
         },
       }}
     >

@@ -9,7 +9,7 @@ import { ExternalLink, Copy, Trash2, Calendar, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { LinkForm } from "@/components/forms/link-form";
-import { deleteLink } from "@/actions/links";
+import { useDeleteLink } from "@/queries/links";
 import { motion } from "framer-motion";
 
 interface LinkCardProps {
@@ -19,7 +19,10 @@ interface LinkCardProps {
 export function LinkCard({ link }: LinkCardProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+
+  // React Query mutation
+  const deleteMutation = useDeleteLink();
+
   const shortUrl = `${
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
   }/l/${link.shortCode}`;
@@ -34,22 +37,12 @@ export function LinkCard({ link }: LinkCardProps) {
     toast.success("Link copied to clipboard");
   };
 
-  const handleDelete = async () => {
-    setIsDeleting(true);
-    try {
-      const result = await deleteLink(link.id);
-      if (result.success) {
-        toast.success("Link deleted successfully");
+  const handleDelete = () => {
+    deleteMutation.mutate(link.id, {
+      onSuccess: () => {
         setShowDeleteDialog(false);
-      } else {
-        toast.error(result.error || "Failed to delete link");
-      }
-    } catch (error) {
-      toast.error("An unexpected error occurred");
-      console.error(error);
-    } finally {
-      setIsDeleting(false);
-    }
+      },
+    });
   };
 
   return (
@@ -129,7 +122,7 @@ export function LinkCard({ link }: LinkCardProps) {
         title="Delete Link"
         description={`Are you sure you want to delete the link "/${link.shortCode}"? This action cannot be undone.`}
         confirmText="Delete"
-        isLoading={isDeleting}
+        isLoading={deleteMutation.isPending}
       />
     </>
   );

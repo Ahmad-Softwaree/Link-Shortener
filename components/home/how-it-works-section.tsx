@@ -40,6 +40,12 @@ function StepCard({
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
+  const stepGradients = [
+    "from-violet-600 to-indigo-600",
+    "from-indigo-600 to-purple-600",
+    "from-purple-600 to-pink-600",
+  ];
+
   return (
     <motion.div
       ref={ref}
@@ -48,13 +54,16 @@ function StepCard({
       transition={{ duration: 0.5, delay: index * 0.2 }}
       className="flex flex-col items-center text-center space-y-4">
       <motion.div
-        whileHover={{ scale: 1.1 }}
+        whileHover={{ scale: 1.1, rotate: 5 }}
         transition={{ type: "spring", stiffness: 300 }}
         className="relative">
-        <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
+        <div
+          className={`w-24 h-24 rounded-2xl bg-gradient-to-br ${stepGradients[index]} flex items-center justify-center shadow-xl`}>
           <span className="text-5xl font-bold text-white">{number}</span>
         </div>
-        <div className="absolute -inset-1 bg-gradient-to-br from-primary to-primary/60 rounded-2xl blur opacity-30 -z-10" />
+        <div
+          className={`absolute -inset-2 bg-gradient-to-br ${stepGradients[index]} rounded-2xl blur-lg opacity-30 -z-10 animate-pulse`}
+        />
       </motion.div>
       <h3 className="text-xl font-semibold">{title}</h3>
       <p className="text-muted-foreground">{description}</p>
@@ -67,7 +76,7 @@ export function HowItWorksSection() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section className="container mx-auto px-4 py-20">
+    <section className=" mx-auto px-4 py-20">
       <motion.div
         ref={ref}
         initial={{ opacity: 0, y: 30 }}

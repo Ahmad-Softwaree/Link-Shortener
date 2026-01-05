@@ -330,7 +330,7 @@ import { LinkPageForm } from "@/components/forms/link-page-form";
 
 export default function NewLinkPage() {
   return (
-    <div className="container max-w-2xl py-8">
+    <div className=" max-w-2xl py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">Create New Link</h1>
         <p className="text-muted-foreground mt-2">

@@ -19,15 +19,15 @@ export default async function Home() {
     <div className="flex min-h-screen flex-col">
       <HeroSection />
 
-      <Separator className="container mx-auto" />
+      <Separator className=" mx-auto" />
 
       <FeaturesSection />
 
-      <Separator className="container mx-auto" />
+      <Separator className=" mx-auto" />
 
       <HowItWorksSection />
 
-      <Separator className="container mx-auto" />
+      <Separator className=" mx-auto" />
 
       <StatsSection />
 

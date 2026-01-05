@@ -30,7 +30,6 @@ export async function GET(
       status: 301, // Permanent redirect
     });
   } catch (error) {
-    console.error("Redirect error:", error);
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

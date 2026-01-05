@@ -1,17 +1,29 @@
 "use client";
 
-import { LinkList } from "@/components/dashboard/link-list";
+import { useState } from "react";
 import { CreateLinkButton } from "@/components/dashboard/create-link-button";
-import type { Link } from "@/db/schema";
+import { LinkCard } from "@/components/cards/link-card";
+import { InfiniteList } from "@/components/shared/infinite-list";
+import { SearchBar } from "@/components/shared/search-bar";
+import { useGetUserLinksInfinite } from "@/queries/links";
+import { FileQuestion } from "lucide-react";
 import { motion } from "framer-motion";
+import type { Link } from "@/db/schema";
 
-interface DashboardContentProps {
-  links: Link[];
-}
+export function DashboardContent() {
+  const [searchQuery, setSearchQuery] = useState("");
 
-export function DashboardContent({ links }: DashboardContentProps) {
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useGetUserLinksInfinite(9, searchQuery);
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className=" mx-auto px-4 py-8">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -41,7 +53,55 @@ export function DashboardContent({ links }: DashboardContentProps) {
         </motion.div>
       </motion.div>
 
-      <LinkList links={links} />
+      {/* Search Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
+        className="mb-6">
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search by URL or short code..."
+          className="max-w-md"
+        />
+      </motion.div>
+
+      <InfiniteList<Link>
+        data={data?.items || []}
+        renderItem={(link, index) => (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.05 }}>
+            <LinkCard link={link} />
+          </motion.div>
+        )}
+        getItemKey={(link) => link.id}
+        isLoading={isLoading}
+        isFetchingNextPage={isFetchingNextPage}
+        hasNextPage={hasNextPage}
+        fetchNextPage={fetchNextPage}
+        error={error}
+        emptyState={{
+          icon: FileQuestion,
+          title: searchQuery ? "No links found" : "No links yet",
+          description: searchQuery
+            ? `No links match "${searchQuery}". Try a different search term.`
+            : "Create your first shortened link to get started. Click the button above to begin.",
+        }}
+        errorState={{
+          title: "Failed to load links",
+          message: "There was an error loading your links. Please try again.",
+        }}
+        loadingState={{
+          message: searchQuery
+            ? `Searching for "${searchQuery}"...`
+            : "Loading your links...",
+        }}
+        gridClassName="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+        loadMoreTrigger="scroll"
+      />
     </div>
   );
 }

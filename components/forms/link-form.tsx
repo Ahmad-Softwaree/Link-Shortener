@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +27,7 @@ import {
   type CreateLinkInput,
   type UpdateLinkInput,
 } from "@/types/validation/links";
-import { createLink, updateLink } from "@/actions/links";
+import { useCreateLink, useUpdateLink } from "@/queries/links";
 import type { Link } from "@/db/schema";
 
 interface LinkFormProps {
@@ -44,8 +43,13 @@ export function LinkForm({
   initialData,
   onSuccess,
 }: LinkFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const isUpdateMode = !!initialData;
+
+  // React Query mutations
+  const createMutation = useCreateLink();
+  const updateMutation = useUpdateLink();
+
+  const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   // Use appropriate schema based on mode
   const schema = isUpdateMode ? updateLinkSchema : createLinkSchema;
@@ -64,40 +68,50 @@ export function LinkForm({
         },
   });
 
-  async function onSubmit(data: CreateLinkInput | UpdateLinkInput) {
-    setIsSubmitting(true);
-    try {
-      if (isUpdateMode && "id" in data) {
-        const result = await updateLink(data.id, {
-          originalUrl: data.originalUrl,
-          shortCode: data.shortCode,
+  // Reset form when modal opens or initialData changes
+  useEffect(() => {
+    if (open) {
+      if (initialData) {
+        form.reset({
+          id: initialData.id,
+          originalUrl: initialData.originalUrl,
+          shortCode: initialData.shortCode,
         });
-
-        if (result.success) {
-          toast.success("Link updated successfully");
-          form.reset();
-          onOpenChange(false);
-          onSuccess?.();
-        } else {
-          toast.error(result.error || "Failed to update link");
-        }
       } else {
-        const result = await createLink(data as CreateLinkInput);
+        form.reset({
+          originalUrl: "",
+          shortCode: "",
+        });
+      }
+    }
+  }, [open, initialData, form]);
 
-        if (result.success) {
-          toast.success("Link created successfully");
+  async function onSubmit(data: CreateLinkInput | UpdateLinkInput) {
+    if (isUpdateMode && "id" in data) {
+      updateMutation.mutate(
+        {
+          id: data.id,
+          data: {
+            originalUrl: data.originalUrl,
+            shortCode: data.shortCode,
+          },
+        },
+        {
+          onSuccess: () => {
+            form.reset();
+            onOpenChange(false);
+            onSuccess?.();
+          },
+        }
+      );
+    } else {
+      createMutation.mutate(data as CreateLinkInput, {
+        onSuccess: () => {
           form.reset();
           onOpenChange(false);
           onSuccess?.();
-        } else {
-          toast.error(result.error || "Failed to create link");
-        }
-      }
-    } catch (error) {
-      toast.error("An unexpected error occurred");
-      console.error(error);
-    } finally {
-      setIsSubmitting(false);
+        },
+      });
     }
   }
 

@@ -3,7 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { links } from "@/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, lt, or, ilike } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 // ============================================
@@ -41,7 +41,6 @@ export async function createLink(data: {
 
     return { success: true, data: newLink };
   } catch (error) {
-    console.error("Failed to create link:", error);
     return { success: false, error: "Failed to create link" };
   }
 }
@@ -65,8 +64,72 @@ export async function getUserLinks() {
 
     return { success: true, data: userLinks };
   } catch (error) {
-    console.error("Failed to fetch links:", error);
     return { success: false, error: "Failed to fetch links", data: [] };
+  }
+}
+
+/**
+ * Get user links with pagination support
+ * @param cursor - The ID of the last item from the previous page (for infinite scroll)
+ * @param limit - Number of items per page (default: 10)
+ * @param search - Search query to filter links by URL or short code
+ */
+export async function getUserLinksPaginated(params: {
+  cursor?: number;
+  limit?: number;
+  search?: string;
+}) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const limit = params.limit || 10;
+
+  try {
+    // Build base conditions
+    let conditions = eq(links.userId, userId);
+
+    // Add search condition if search query is provided
+    if (params.search && params.search.trim()) {
+      const searchCondition = or(
+        ilike(links.originalUrl, `%${params.search}%`),
+        ilike(links.shortCode, `%${params.search}%`)
+      );
+      conditions = and(conditions, searchCondition) as any;
+    }
+
+    // Add cursor condition for pagination
+    if (params.cursor) {
+      conditions = and(conditions, lt(links.id, params.cursor)) as any;
+    }
+
+    const userLinks = await db
+      .select()
+      .from(links)
+      .where(conditions)
+      .orderBy(desc(links.createdAt))
+      .limit(limit + 1); // Fetch one extra to check if there's a next page
+
+    // Check if there's a next page
+    const hasNextPage = userLinks.length > limit;
+    const items = hasNextPage ? userLinks.slice(0, limit) : userLinks;
+    const nextCursor = hasNextPage ? items[items.length - 1].id : undefined;
+
+    return {
+      success: true,
+      data: {
+        items,
+        nextCursor,
+        hasNextPage,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: "Failed to fetch links",
+      data: { items: [], nextCursor: undefined, hasNextPage: false },
+    };
   }
 }
 
@@ -84,7 +147,6 @@ export async function getLinkByShortCode(shortCode: string) {
 
     return { success: true, data: link };
   } catch (error) {
-    console.error("Failed to fetch link:", error);
     return { success: false, error: "Failed to fetch link" };
   }
 }
@@ -108,7 +170,6 @@ export async function getLinkById(id: number) {
 
     return { success: true, data: link };
   } catch (error) {
-    console.error("Failed to fetch link:", error);
     return { success: false, error: "Failed to fetch link" };
   }
 }
@@ -143,7 +204,6 @@ export async function updateLink(
     revalidatePath("/dashboard");
     return { success: true, data: updatedLink };
   } catch (error) {
-    console.error("Failed to update link:", error);
     return { success: false, error: "Failed to update link" };
   }
 }
@@ -171,7 +231,6 @@ export async function deleteLink(id: number) {
     revalidatePath("/dashboard");
     return { success: true };
   } catch (error) {
-    console.error("Failed to delete link:", error);
     return { success: false, error: "Failed to delete link" };
   }
 }

@@ -2,14 +2,23 @@
 
 import { LinkCard } from "@/components/cards/link-card";
 import type { Link } from "@/db/schema";
-import { FileQuestion } from "lucide-react";
+import { FileQuestion, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface LinkListProps {
   links: Link[];
+  isLoading?: boolean;
 }
 
-export function LinkList({ links }: LinkListProps) {
+export function LinkList({ links, isLoading }: LinkListProps) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   if (links.length === 0) {
     return (
       <motion.div

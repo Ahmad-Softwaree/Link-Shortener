@@ -1,16 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from "@clerk/nextjs";
+import { ClerkProvider } from "@clerk/nextjs";
 import { shadcn } from "@clerk/themes";
-import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
+import { Header } from "@/components/shared/header";
+import { QueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -44,24 +38,11 @@ export default function RootLayout({
       <html lang="en" className="dark">
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-          <header className="flex justify-between items-center p-4 border-b">
-            <div className="font-bold text-xl">Link Shortener</div>
-            <div className="flex gap-4 items-center">
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <Button variant="ghost">Sign In</Button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <Button>Sign Up</Button>
-                </SignUpButton>
-              </SignedOut>
-              <SignedIn>
-                <UserButton />
-              </SignedIn>
-            </div>
-          </header>
-          {children}
-          <Toaster />
+          <QueryProvider>
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Toaster />
+          </QueryProvider>
         </body>
       </html>
     </ClerkProvider>

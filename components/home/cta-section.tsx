@@ -12,14 +12,14 @@ export function CTASection() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section className="container mx-auto px-4 py-20">
+    <section className=" mx-auto px-4 py-20">
       <motion.div
         ref={ref}
         initial={{ opacity: 0, y: 50 }}
         animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
         transition={{ duration: 0.6 }}>
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="flex flex-col items-center text-center space-y-6 p-12">
+        <Card className="border border-violet-200 dark:border-violet-800 bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 dark:from-violet-950/50 dark:via-purple-950/50 dark:to-indigo-950/50 relative overflow-hidden shadow-lg">
+          <CardContent className="flex flex-col items-center text-center space-y-6 p-12 relative">
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
@@ -38,9 +38,13 @@ export function CTASection() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-              transition={{ duration: 0.5, delay: 0.4 }}>
+              transition={{ duration: 0.5, delay: 0.4 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}>
               <SignUpButton mode="modal">
-                <Button size="lg" className="text-lg px-8">
+                <Button
+                  size="lg"
+                  className="text-lg px-8 shadow-lg hover:shadow-xl transition-all duration-300">
                   Create Your Account
                 </Button>
               </SignUpButton>

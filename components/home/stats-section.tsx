@@ -78,25 +78,33 @@ function StatCard({
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
+  const statGradients = [
+    "from-violet-600 to-indigo-600 dark:from-violet-400 dark:to-indigo-400",
+    "from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400",
+    "from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400",
+  ];
+
   return (
     <motion.div
       ref={ref}
       initial={{ opacity: 0, scale: 0.5 }}
       animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="space-y-2">
-      <div className="text-4xl md:text-5xl font-bold text-primary">
+      whileHover={{ scale: 1.05 }}
+      className="space-y-2 p-6 rounded-2xl bg-gradient-to-br from-background to-muted border border-border hover:border-violet-200 dark:hover:border-violet-800 transition-all duration-300 shadow-sm hover:shadow-lg">
+      <div
+        className={`text-4xl md:text-5xl font-bold bg-gradient-to-r ${statGradients[index]} bg-clip-text text-transparent`}>
         {prefix}
         <AnimatedNumber value={value} suffix={suffix} />
       </div>
-      <p className="text-muted-foreground">{label}</p>
+      <p className="text-muted-foreground font-medium">{label}</p>
     </motion.div>
   );
 }
 
 export function StatsSection() {
   return (
-    <section className="container mx-auto px-4 py-20">
+    <section className=" mx-auto px-4 py-20">
       <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto text-center">
         {stats.map((stat, index) => (
           <StatCard key={index} {...stat} index={index} />

@@ -192,7 +192,7 @@ import Link from "next/link";
 export function Header() {
   return (
     <header className="border-b">
-      <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+      <div className=" mx-auto px-4 py-4 flex justify-between items-center">
         <Link href="/" className="text-xl font-bold">
           LinkShortener
         </Link>
@@ -215,7 +215,7 @@ import { Sparkles } from "lucide-react";
 
 export function HeroSection() {
   return (
-    <section className="container mx-auto px-4 py-20 md:py-32">
+    <section className=" mx-auto px-4 py-20 md:py-32">
       <div className="flex flex-col items-center text-center space-y-8">
         <Badge variant="secondary" className="text-sm">
           <Sparkles className="mr-2 h-3 w-3" />
@@ -465,6 +465,7 @@ When extracting a component:
 6. **Consistent naming** - Follow established patterns
 7. **Logical grouping** - Organize by feature/type, not arbitrarily
 8. **Avoid prop drilling** - If passing props through 3+ levels, reconsider structure
+9. **Toast notifications** - ALWAYS use toast inside react-query file functions (mutation callbacks) if available, NOT directly inside components
 
 ---
 

@@ -91,6 +91,52 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_...
 CLERK_SECRET_KEY=sk_...
 ```
 
+### Dark Theme Configuration
+
+Clerk components use the application's dark theme by default through the `appearance` prop on `ClerkProvider`:
+
+```typescript
+// app/layout.tsx
+import { ClerkProvider } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <ClerkProvider
+      appearance={{
+        baseTheme: dark,
+        variables: {
+          colorPrimary: "oklch(0.922 0 0)",
+          colorBackground: "oklch(0.145 0 0)",
+          colorText: "oklch(0.985 0 0)",
+          colorInputBackground: "oklch(0.205 0 0)",
+          colorInputText: "oklch(0.985 0 0)",
+        },
+        elements: {
+          formButtonPrimary: "bg-primary text-primary-foreground hover:bg-primary/90",
+          card: "bg-card text-card-foreground",
+          headerTitle: "text-foreground",
+          headerSubtitle: "text-muted-foreground",
+          socialButtonsBlockButton: "bg-secondary text-secondary-foreground hover:bg-secondary/90",
+          formFieldLabel: "text-foreground",
+          formFieldInput: "bg-input text-foreground border-border focus:ring-ring",
+          footerActionLink: "text-primary hover:text-primary/90",
+          identityPreviewText: "text-foreground",
+          identityPreviewEditButton: "text-primary",
+        },
+      }}
+    >
+      {/* ... */}
+    </ClerkProvider>
+  );
+}
+```
+
+The configuration:
+- Uses Clerk's built-in `dark` theme as the base
+- Customizes colors using CSS variables to match the application's design system
+- Applies Tailwind CSS classes to elements for consistent styling
+
 ## Common Patterns
 
 ### Getting User Information

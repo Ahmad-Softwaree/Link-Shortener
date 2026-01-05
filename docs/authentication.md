@@ -91,6 +91,44 @@ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_...
 CLERK_SECRET_KEY=sk_...
 ```
 
+### Dark Theme Configuration
+
+Clerk components use the official shadcn theme integration from `@clerk/themes`:
+
+**Step 1: Import shadcn CSS in `globals.css`**
+
+```css
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@clerk/themes/shadcn.css";
+```
+
+**Step 2: Use the shadcn theme in `layout.tsx`**
+
+```typescript
+// app/layout.tsx
+import { ClerkProvider } from "@clerk/nextjs";
+import { shadcn } from "@clerk/themes";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <ClerkProvider
+      appearance={{
+        baseTheme: shadcn,
+      }}
+    >
+      {/* ... */}
+    </ClerkProvider>
+  );
+}
+```
+
+The configuration:
+- Uses the **official Clerk shadcn theme** from `@clerk/themes` package
+- Automatically integrates with shadcn/ui design system
+- Ensures all Clerk modals (sign-in, sign-up) and components (UserButton) match the application's theme
+- Minimal configuration - the theme handles all styling automatically
+
 ## Common Patterns
 
 ### Getting User Information

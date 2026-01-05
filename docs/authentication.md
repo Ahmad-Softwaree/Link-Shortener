@@ -93,18 +93,16 @@ CLERK_SECRET_KEY=sk_...
 
 ### Dark Theme Configuration
 
-Clerk components use the application's dark theme by default through the `appearance` prop on `ClerkProvider`:
+Clerk components use the application's dark theme through the `appearance` prop on `ClerkProvider`:
 
 ```typescript
 // app/layout.tsx
 import { ClerkProvider } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider
       appearance={{
-        baseTheme: dark,
         variables: {
           colorPrimary: "oklch(0.922 0 0)",
           colorBackground: "oklch(0.145 0 0)",
@@ -133,9 +131,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 ```
 
 The configuration:
-- Uses Clerk's built-in `dark` theme as the base
-- Customizes colors using CSS variables to match the application's design system
-- Applies Tailwind CSS classes to elements for consistent styling
+- Customizes colors using CSS variables in oklch format to match the application's dark theme
+- Applies Tailwind CSS classes to elements for consistent styling with the rest of the application
+- Ensures all Clerk modals (sign-in, sign-up) and components (UserButton) use dark theme colors
 
 ## Common Patterns
 

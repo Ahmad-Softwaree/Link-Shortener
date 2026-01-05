@@ -93,28 +93,28 @@ CLERK_SECRET_KEY=sk_...
 
 ### Dark Theme Configuration
 
-Clerk components use the application's shadcn/ui dark theme through Tailwind CSS classes applied via the `appearance` prop on `ClerkProvider`:
+Clerk components use the official shadcn theme integration from `@clerk/themes`:
+
+**Step 1: Import shadcn CSS in `globals.css`**
+
+```css
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@clerk/themes/shadcn.css";
+```
+
+**Step 2: Use the shadn theme in `layout.tsx`**
 
 ```typescript
 // app/layout.tsx
 import { ClerkProvider } from "@clerk/nextjs";
+import { shadn } from "@clerk/themes";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider
       appearance={{
-        elements: {
-          formButtonPrimary: "bg-primary text-primary-foreground hover:bg-primary/90",
-          card: "bg-card text-card-foreground border-border",
-          headerTitle: "text-foreground",
-          headerSubtitle: "text-muted-foreground",
-          socialButtonsBlockButton: "bg-secondary text-secondary-foreground hover:bg-secondary/90 border border-input",
-          formFieldLabel: "text-foreground",
-          formFieldInput: "bg-background text-foreground border-input focus:ring-ring",
-          footerActionLink: "text-primary hover:text-primary/90",
-          identityPreviewText: "text-foreground",
-          identityPreviewEditButton: "text-primary",
-        },
+        baseTheme: shadn,
       }}
     >
       {/* ... */}
@@ -124,10 +124,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 ```
 
 The configuration:
-- Uses **shadcn/ui Tailwind CSS classes** (e.g., `bg-primary`, `text-foreground`) directly
-- Automatically adapts to the shadcn theme through CSS variables
+- Uses the **official Clerk shadcn theme** from `@clerk/themes` package
+- Automatically integrates with shadcn/ui design system
 - Ensures all Clerk modals (sign-in, sign-up) and components (UserButton) match the application's theme
-- No hardcoded colors - fully integrated with shadcn's theming system
+- Minimal configuration - the theme handles all styling automatically
 
 ## Common Patterns
 

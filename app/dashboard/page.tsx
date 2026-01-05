@@ -1,5 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { getUserLinks } from "@/actions/links";
+import { DashboardContent } from "@/components/dashboard/dashboard-content";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -8,9 +10,9 @@ export default async function DashboardPage() {
     redirect("/");
   }
 
-  return (
-    <div>
-      <h1>Dashboard</h1>
-    </div>
-  );
+  // Fetch user's links
+  const result = await getUserLinks();
+  const links = result.success ? result.data : [];
+
+  return <DashboardContent links={links} />;
 }

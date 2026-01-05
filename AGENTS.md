@@ -28,9 +28,15 @@ These documents define required patterns, conventions, and standards for this co
 
 - **[Authentication (Clerk)](docs/authentication.md)** - Clerk integration, route protection, modal auth, and user management
 
+### 🗄️ Data Fetching & Database
+
+- **[Data Fetching (Server Actions)](docs/data-fetching.md)** - Server Actions patterns, database queries, Drizzle ORM usage, and file organization
+
 ### 🎨 UI & Components
 
 - **[UI Components (shadcn/ui)](docs/ui-components.md)** - shadcn/ui usage, component patterns, and styling guidelines
+- **[Component Organization](docs/component-organization.md)** - Component structure, code separation, and file organization
+- **[Forms & Validation](docs/forms-validation.md)** - Form handling with react-hook-form, Zod validation, and form patterns
 
 ## 🎯 Quick Reference
 

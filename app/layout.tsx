@@ -10,6 +10,7 @@ import {
 } from "@clerk/nextjs";
 import { shadcn } from "@clerk/themes";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -60,6 +61,7 @@ export default function RootLayout({
             </div>
           </header>
           {children}
+          <Toaster />
         </body>
       </html>
     </ClerkProvider>

@@ -103,18 +103,18 @@ Clerk components use the official shadcn theme integration from `@clerk/themes`:
 @import "@clerk/themes/shadcn.css";
 ```
 
-**Step 2: Use the shadn theme in `layout.tsx`**
+**Step 2: Use the shadcn theme in `layout.tsx`**
 
 ```typescript
 // app/layout.tsx
 import { ClerkProvider } from "@clerk/nextjs";
-import { shadn } from "@clerk/themes";
+import { shadcn } from "@clerk/themes";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClerkProvider
       appearance={{
-        baseTheme: shadn,
+        baseTheme: shadcn,
       }}
     >
       {/* ... */}

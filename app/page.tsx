@@ -2,7 +2,13 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { SignUpButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Link2, Zap, BarChart3, Shield, Globe, Sparkles } from "lucide-react";
@@ -29,8 +35,9 @@ export default async function Home() {
             <span className="text-primary">Amplify Your Reach</span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
-            Transform long, complex URLs into short, memorable links. Track performance, 
-            manage your links, and grow your online presence with our powerful link shortener.
+            Transform long, complex URLs into short, memorable links. Track
+            performance, manage your links, and grow your online presence with
+            our powerful link shortener.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 pt-4">
             <SignUpButton mode="modal">
@@ -38,9 +45,6 @@ export default async function Home() {
                 Get Started Free
               </Button>
             </SignUpButton>
-            <Button size="lg" variant="outline" className="text-lg px-8" asChild>
-              <a href="#features">Learn More</a>
-            </Button>
           </div>
         </div>
       </section>
@@ -55,7 +59,8 @@ export default async function Home() {
             Everything You Need to Succeed
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Powerful features designed to help you manage and optimize your links effectively.
+            Powerful features designed to help you manage and optimize your
+            links effectively.
           </p>
         </div>
 
@@ -65,8 +70,8 @@ export default async function Home() {
               <Link2 className="h-10 w-10 text-primary mb-2" />
               <CardTitle>Instant Link Shortening</CardTitle>
               <CardDescription>
-                Convert long URLs into short, shareable links in seconds. Perfect for social media, 
-                emails, and anywhere space matters.
+                Convert long URLs into short, shareable links in seconds.
+                Perfect for social media, emails, and anywhere space matters.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -76,8 +81,8 @@ export default async function Home() {
               <BarChart3 className="h-10 w-10 text-primary mb-2" />
               <CardTitle>Analytics & Insights</CardTitle>
               <CardDescription>
-                Track clicks, understand your audience, and measure the impact of your links 
-                with detailed analytics and reporting.
+                Track clicks, understand your audience, and measure the impact
+                of your links with detailed analytics and reporting.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -87,8 +92,8 @@ export default async function Home() {
               <Zap className="h-10 w-10 text-primary mb-2" />
               <CardTitle>Lightning Fast</CardTitle>
               <CardDescription>
-                Built with modern technology for blazing-fast performance. Your links work 
-                instantly, every time.
+                Built with modern technology for blazing-fast performance. Your
+                links work instantly, every time.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -98,8 +103,8 @@ export default async function Home() {
               <Shield className="h-10 w-10 text-primary mb-2" />
               <CardTitle>Secure & Reliable</CardTitle>
               <CardDescription>
-                Enterprise-grade security ensures your links are safe. SSL encryption and 
-                99.9% uptime guarantee.
+                Enterprise-grade security ensures your links are safe. SSL
+                encryption and 99.9% uptime guarantee.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -109,7 +114,7 @@ export default async function Home() {
               <Globe className="h-10 w-10 text-primary mb-2" />
               <CardTitle>Custom Domains</CardTitle>
               <CardDescription>
-                Use your own domain for branded short links. Build trust and 
+                Use your own domain for branded short links. Build trust and
                 reinforce your brand identity.
               </CardDescription>
             </CardHeader>
@@ -120,8 +125,8 @@ export default async function Home() {
               <Sparkles className="h-10 w-10 text-primary mb-2" />
               <CardTitle>Easy Management</CardTitle>
               <CardDescription>
-                Organize, edit, and manage all your links from one intuitive dashboard. 
-                Find what you need, when you need it.
+                Organize, edit, and manage all your links from one intuitive
+                dashboard. Find what you need, when you need it.
               </CardDescription>
             </CardHeader>
           </Card>
@@ -138,7 +143,8 @@ export default async function Home() {
             Simple, Fast, Effective
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Get started in three easy steps and start sharing your short links immediately.
+            Get started in three easy steps and start sharing your short links
+            immediately.
           </p>
         </div>
 
@@ -159,7 +165,8 @@ export default async function Home() {
             </div>
             <h3 className="text-xl font-semibold">Shorten</h3>
             <p className="text-muted-foreground">
-              Paste your long URL and get a short link instantly. Customize it if you want.
+              Paste your long URL and get a short link instantly. Customize it
+              if you want.
             </p>
           </div>
 
@@ -169,7 +176,8 @@ export default async function Home() {
             </div>
             <h3 className="text-xl font-semibold">Share & Track</h3>
             <p className="text-muted-foreground">
-              Share your link anywhere and monitor its performance with real-time analytics.
+              Share your link anywhere and monitor its performance with
+              real-time analytics.
             </p>
           </div>
         </div>
@@ -181,15 +189,21 @@ export default async function Home() {
       <section className="container mx-auto px-4 py-20">
         <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto text-center">
           <div className="space-y-2">
-            <div className="text-4xl md:text-5xl font-bold text-primary">100K+</div>
+            <div className="text-4xl md:text-5xl font-bold text-primary">
+              100K+
+            </div>
             <p className="text-muted-foreground">Links Shortened</p>
           </div>
           <div className="space-y-2">
-            <div className="text-4xl md:text-5xl font-bold text-primary">99.9%</div>
+            <div className="text-4xl md:text-5xl font-bold text-primary">
+              99.9%
+            </div>
             <p className="text-muted-foreground">Uptime Guarantee</p>
           </div>
           <div className="space-y-2">
-            <div className="text-4xl md:text-5xl font-bold text-primary">&lt;100ms</div>
+            <div className="text-4xl md:text-5xl font-bold text-primary">
+              &lt;100ms
+            </div>
             <p className="text-muted-foreground">Average Response Time</p>
           </div>
         </div>
@@ -203,8 +217,8 @@ export default async function Home() {
               Ready to Get Started?
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl">
-              Join thousands of users who trust our platform to manage their links. 
-              Start shortening your URLs for free today.
+              Join thousands of users who trust our platform to manage their
+              links. Start shortening your URLs for free today.
             </p>
             <SignUpButton mode="modal">
               <Button size="lg" className="text-lg px-8">

@@ -42,6 +42,8 @@ These documents define required patterns, conventions, and standards for this co
 - **Component Composition**: Build reusable, composable UI components
 - **Accessibility**: Follow ARIA standards and semantic HTML
 - **Performance**: Optimize with Next.js features (caching, streaming, etc.)
+- **⚠️ NEVER Use middleware.ts**: The `middleware.ts` pattern is deprecated in Next.js 16. Use `proxy.ts` instead for any middleware-like functionality
+- **🔐 Clerk Standard Patterns**: ALWAYS use Clerk's standard methods for handling auth routes and redirects in the newest version. Follow official Clerk documentation for route protection and authentication flows
 
 ### Common Patterns
 

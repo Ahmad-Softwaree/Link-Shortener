@@ -24,7 +24,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Link Shortener - Shorten Your Links, Amplify Your Reach",
-  description: "Transform long, complex URLs into short, memorable links. Track performance, manage your links, and grow your online presence with our powerful link shortener.",
+  description:
+    "Transform long, complex URLs into short, memorable links. Track performance, manage your links, and grow your online presence with our powerful link shortener.",
 };
 
 export default function RootLayout({
@@ -37,7 +38,8 @@ export default function RootLayout({
       appearance={{
         baseTheme: shadcn,
       }}
-    >
+      signInFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/dashboard">
       <html lang="en" className="dark">
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}>

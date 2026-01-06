@@ -1,25 +1,13 @@
 import {
   ComponentPropsWithoutRef,
   ComponentPropsWithRef,
-  ElementType,
   PropsWithChildren,
 } from "react";
 import {
   FetchNextPageOptions,
-  InfiniteData,
   InfiniteQueryObserverResult,
   RefetchOptions,
 } from "@tanstack/react-query";
-
-export type Setting = {
-  id: number;
-  safeStock: number;
-  initialMoney: number;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date;
-  deleted: boolean;
-};
 
 export type GlobalFormProps = {
   state?: "update" | "insert";
@@ -95,13 +83,6 @@ export type LoadingProps = PropsWithChildren<{
   ComponentPropsWithoutRef<"div">;
 
 export type QueryProviderType = PropsWithChildren<{}>;
-
-export type SideLink = {
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  name: string;
-  part: string;
-  section: string;
-};
 
 export type FormFinalOperation = {
   onClose?: () => void;

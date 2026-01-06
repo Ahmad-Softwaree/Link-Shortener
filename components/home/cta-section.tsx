@@ -7,6 +7,8 @@ import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { Github } from "lucide-react";
+import Link from "next/link";
 
 export function CTASection() {
   const ref = useRef(null);
@@ -40,15 +42,34 @@ export function CTASection() {
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.5, delay: 0.4 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}>
-              <SignUpButton mode="modal">
-                <Button
-                  size="lg"
-                  className="text-lg px-8 shadow-lg hover:shadow-xl transition-all duration-300">
-                  {t("home.cta.button")}
-                </Button>
-              </SignUpButton>
+              className="flex flex-col sm:flex-row gap-4">
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}>
+                <SignUpButton mode="modal">
+                  <Button
+                    size="lg"
+                    className="text-lg px-8 shadow-lg hover:shadow-xl transition-all duration-300">
+                    {t("home.cta.button")}
+                  </Button>
+                </SignUpButton>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}>
+                <Link
+                  href="https://github.com/Ahmad-Softwaree/Link-Shortener"
+                  target="_blank"
+                  rel="noopener noreferrer">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="text-lg px-8 shadow-lg hover:shadow-xl transition-all duration-300">
+                    <Github className="mr-2 h-5 w-5" />
+                    {t("home.cta.star_github")}
+                  </Button>
+                </Link>
+              </motion.div>
             </motion.div>
           </CardContent>
         </Card>

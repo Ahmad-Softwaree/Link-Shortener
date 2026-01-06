@@ -110,7 +110,8 @@
       "title_line1": "Shorten Your Links,",
       "title_line2": "Amplify Your Reach",
       "description": "Transform long, complex URLs into short, memorable links. Track performance, manage your links, and grow your online presence with our powerful link shortener.",
-      "get_started": "Get Started Free"
+      "get_started": "Get Started Free",
+      "view_github": "View on GitHub"
     },
     "features": {
       "badge": "Features",
@@ -148,7 +149,8 @@
     "cta": {
       "title": "Ready to Get Started?",
       "description": "Join thousands of users who trust our platform to manage their links. Start shortening your URLs for free today.",
-      "button": "Create Your Account"
+      "button": "Create Your Account",
+      "star_github": "Star on GitHub"
     },
     "footer": {
       "description": "Transform your long URLs into short, shareable links instantly. Track, manage, and optimize your links with ease.",

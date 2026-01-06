@@ -3,9 +3,10 @@
 import { SignUpButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Github, Link2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import Link from "next/link";
 
 export function HeroSection() {
   const { t } = useTranslation();
@@ -67,9 +68,22 @@ export function HeroSection() {
             <Button
               size="lg"
               className="text-lg px-8 shadow-lg hover:shadow-xl transition-all duration-300">
+              <Link2 className="mr-2 h-5 w-5" />
               {t("home.hero.get_started")}
             </Button>
           </SignUpButton>
+          <Link
+            href="https://github.com/Ahmad-Softwaree/Link-Shortener"
+            target="_blank"
+            rel="noopener noreferrer">
+            <Button
+              size="lg"
+              variant="outline"
+              className="text-lg px-8 shadow-lg hover:shadow-xl transition-all duration-300">
+              <Github className="mr-2 h-5 w-5" />
+              {t("home.hero.view_github")}
+            </Button>
+          </Link>
         </motion.div>
       </motion.div>
     </section>

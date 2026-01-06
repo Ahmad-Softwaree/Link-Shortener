@@ -15,7 +15,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useDeleteLink } from "@/lib/react-query/queries/links.query";
-import FilterModal from "@/components/shared/FilterModal";
 
 export function ModalManager() {
   const { modal, closeModal, modalData } = useModalStore();
@@ -70,14 +69,6 @@ export function ModalManager() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    );
-  }
-
-  if (modal === "filter") {
-    return (
-      <Modal title={t("filter.status")}>
-        <FilterModal />
-      </Modal>
     );
   }
 

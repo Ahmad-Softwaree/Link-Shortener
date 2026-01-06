@@ -7,7 +7,6 @@ export const ENUMs = {
     SEARCH: "search",
     LIMIT: "limit",
     PAGE: "page",
-    STATUS: "status",
   },
   LINK_STATUS: {
     ACTIVE: "active",

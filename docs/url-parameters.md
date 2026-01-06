@@ -439,7 +439,6 @@ export const ENUMs = {
     PAGE: "page",
     LIMIT: "limit",
     SEARCH: "search",
-    STATUS: "status",
   },
 };
 ```
@@ -452,7 +451,6 @@ const [queries, setQueries] = useQueryStates({
   [ENUMs.PARAMS.PAGE]: parseAsInteger.withDefault(0),
   [ENUMs.PARAMS.LIMIT]: parseAsInteger.withDefault(cookieLimit),
   [ENUMs.PARAMS.SEARCH]: parseAsString.withDefault(""),
-  [ENUMs.PARAMS.STATUS]: parseAsString.withDefault("all"),
 });
 ```
 

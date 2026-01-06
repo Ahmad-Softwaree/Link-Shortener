@@ -211,7 +211,7 @@
 
 @layer components {
   .english_font {
-    @apply font-fredoka;
+    @apply font-mono;
   }
   .arabic_font {
     @apply font-tajawal;

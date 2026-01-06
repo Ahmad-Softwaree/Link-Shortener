@@ -44,9 +44,15 @@ These documents define required patterns, conventions, and standards for this co
 - **[Component Organization](docs/component-organization.md)** - Component structure, code separation, and file organization
 - **[Forms & Validation](docs/forms-validation.md)** - Form handling with react-hook-form, Zod validation, and form patterns
 - **[Pagination](docs/pagination.md)** - Pagination patterns, infinite scroll, TanStack Table for tables, and card-based displays
+- **[Theme & Dark/Light Mode](docs/theme-dark-light-mode.md)** - next-themes integration, CSS variables, theme switching, and dark mode patterns
+
+### 🌍 Internationalization
+
+- **[Internationalization (i18next)](docs/internationalization.md)** - Multi-language support with i18next, translation patterns, RTL support, and language switching
 
 ### 📝 Documentation & Standards
 
+- **[Folder & File Naming Conventions](docs/folder-file-conventions.md)** - Folder structure, file naming patterns, and organization standards (⚠️ CRITICAL: Follow these conventions for all new files)
 - **[Documentation Standards](docs/documentation-standards.md)** - File organization, markdown standards, and documentation structure (⚠️ CRITICAL: Never create .md files in root)
 
 ## 🎯 Quick Reference

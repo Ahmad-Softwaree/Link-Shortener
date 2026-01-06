@@ -1,98 +1,80 @@
+"use client";
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useModalStore } from "@/lib/store/modal.store";
 import {
-  getData,
-  getOneData,
-  addData,
-  updateData,
-  deleteData,
+  getLinks,
+  getLink,
+  addLink,
+  updateLink,
+  deleteLink,
   type PaginationResult,
   type CRUDReturn,
-} from "../actions/action";
+} from "../actions/links.action";
 import type { QueryParam } from "@/types/global";
-import type { PgTable } from "drizzle-orm/pg-core";
+import type { Link, NewLink } from "@/lib/db/schema";
+import { links } from "../keys";
 
-type UseGetDataOptions<T> = {
-  table: PgTable;
-  queryKey: string[];
+type UseGetLinksOptions = {
   queries?: QueryParam;
   enabled?: boolean;
 };
 
-export function useGetData<T>({
-  table,
-  queryKey,
+export function useGetLinks({
   queries,
   enabled = true,
-}: UseGetDataOptions<T>) {
+}: UseGetLinksOptions = {}) {
   const { userId } = useAuth();
 
   return useQuery({
-    queryKey: [...queryKey, queries],
-    queryFn: (): Promise<PaginationResult<T>> =>
-      getData<T>(table, userId!, queries),
+    queryKey: links.list(queries),
+    queryFn: (): Promise<PaginationResult<Link>> => getLinks(userId!, queries),
     retry: 0,
     enabled: !!userId && enabled,
   });
 }
 
-type UseGetOneDataOptions<T> = {
-  table: PgTable;
-  queryKey: string[];
+type UseGetLinkOptions = {
   id: number;
   enabled?: boolean;
 };
 
-export function useGetOneData<T>({
-  table,
-  queryKey,
-  id,
-  enabled = true,
-}: UseGetOneDataOptions<T>) {
+export function useGetLink({ id, enabled = true }: UseGetLinkOptions) {
   const { userId } = useAuth();
 
   return useQuery({
-    queryKey: [...queryKey, id],
-    queryFn: (): Promise<T | null> => getOneData<T>(table, id, userId!),
+    queryKey: links.detail(id),
+    queryFn: (): Promise<Link | null> => getLink(id, userId!),
     retry: 0,
     enabled: !!userId && !!id && enabled,
   });
 }
 
-type UseMutationOptions = {
-  table: PgTable;
-  queryKey: string[];
-  uniqueField?: string;
+type UseAddLinkOptions = {
   closeTheModal?: boolean;
   successMessage?: string;
-  errorMessage?: string;
 };
 
-export function useAddData({
-  table,
-  queryKey,
-  uniqueField,
+export function useAddLink({
   closeTheModal = true,
   successMessage,
-}: UseMutationOptions) {
+}: UseAddLinkOptions = {}) {
   const { userId } = useAuth();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const { closeModal } = useModalStore();
 
   return useMutation({
-    mutationFn: async (form: Record<string, any>): Promise<CRUDReturn> =>
-      addData(table, form, userId!, uniqueField),
+    mutationFn: async (form: Omit<NewLink, "userId">): Promise<CRUDReturn> =>
+      addLink(form, userId!),
     onSuccess: ({ message }) => {
-      toast.success(
-        successMessage || message || t("toast.created_successfully")
-      );
+      toast.success(successMessage || message || t("toast.link_created"));
       if (closeTheModal) closeModal();
       return queryClient.invalidateQueries({
-        queryKey,
+        queryKey: links.lists(),
       });
     },
     onError: (error: Error) => {
@@ -101,57 +83,57 @@ export function useAddData({
   });
 }
 
-export function useUpdateData(
-  id: number,
-  {
-    table,
-    queryKey,
-    uniqueField,
-    closeTheModal = true,
-    successMessage,
-  }: UseMutationOptions
-) {
-  const { userId } = useAuth();
-  const queryClient = useQueryClient();
-  const { t } = useTranslation();
-  const { closeModal } = useModalStore();
+type UseUpdateLinkOptions = {
+  closeTheModal?: boolean;
+  successMessage?: string;
+};
 
-  return useMutation({
-    mutationFn: async (form: Record<string, any>): Promise<CRUDReturn> =>
-      updateData(table, id, form, userId!, uniqueField),
-    onSuccess: ({ message }) => {
-      toast.success(
-        successMessage || message || t("toast.updated_successfully")
-      );
-      if (closeTheModal) closeModal();
-      return queryClient.invalidateQueries({
-        queryKey,
-      });
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || t("toast.error_occurred"));
-    },
-  });
-}
-
-export function useDeleteData({
-  table,
-  queryKey,
+export function useUpdateLink({
+  closeTheModal = true,
   successMessage,
-}: UseMutationOptions) {
+}: UseUpdateLinkOptions = {}) {
+  const { userId } = useAuth();
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+  const { closeModal } = useModalStore();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      form,
+    }: {
+      id: number;
+      form: Partial<Omit<NewLink, "userId">>;
+    }): Promise<CRUDReturn> => updateLink(id, form, userId!),
+    onSuccess: ({ message }) => {
+      toast.success(successMessage || message || t("toast.link_updated"));
+      if (closeTheModal) closeModal();
+      return queryClient.invalidateQueries({
+        queryKey: links.lists(),
+      });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t("toast.error_occurred"));
+    },
+  });
+}
+
+type UseDeleteLinkOptions = {
+  successMessage?: string;
+};
+
+export function useDeleteLink({ successMessage }: UseDeleteLinkOptions = {}) {
   const { userId } = useAuth();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (id: number): Promise<CRUDReturn> =>
-      deleteData(table, id, userId!),
+      deleteLink(id, userId!),
     onSuccess: ({ message }) => {
-      toast.success(
-        successMessage || message || t("toast.deleted_successfully")
-      );
+      toast.success(successMessage || message || t("toast.link_deleted"));
       return queryClient.invalidateQueries({
-        queryKey,
+        queryKey: links.lists(),
       });
     },
     onError: (error: Error) => {

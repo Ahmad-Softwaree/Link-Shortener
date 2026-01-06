@@ -219,6 +219,10 @@
   .kurdish_font {
     @apply font-rudaw;
   }
+
+  [class*="cl-"] {
+    font-family: fredoka, sans-serif !important;
+  }
 }
 
 @layer base {
@@ -232,7 +236,7 @@
   header,
   footer,
   main {
-    @apply px-10;
+    @apply px-5 md:px-10;
   }
 }
 

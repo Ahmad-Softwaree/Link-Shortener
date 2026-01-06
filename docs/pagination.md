@@ -5,26 +5,27 @@
 
 ## 📋 Overview
 
-This document defines the standards for implementing pagination across the Link Shortener application. All paginated data MUST use the generic pagination component with consistent patterns for both table and card layouts.
+This document defines pagination standards for the Link Shortener application. All paginated data uses a **generic DataBox component** with **card-based displays** and **manual pagination controls**.
 
 ## 🎯 Core Principles
 
-- **Single Generic Component**: Use ONE reusable pagination component for all data display
-- **Two Display Modes**: Tables (TanStack Table) OR Cards (shadcn components)
-- **Infinite Scroll**: Default pagination strategy using React Query infinite queries
-- **Type Safety**: Full TypeScript support with generic types
+- **DataBox Component**: Single reusable component for all paginated data
+- **Card Display**: Use card components (NO TanStack Table in this project)
+- **Manual Pagination**: Page-based navigation with limit controls
+- **URL State Management**: nuqs for page/limit/search parameters
+- **Type Safety**: Full TypeScript support with generics
 - **Consistent UX**: Unified loading, empty, and error states
 
-## 📦 Required Dependencies
+## 📦 Dependencies
 
 ```bash
-# React Query for data fetching
+# React Query for data fetching (already installed)
 bun add @tanstack/react-query
 
-# TanStack Table for table pagination
-bun add @tanstack/react-table
+# nuqs for URL state management (already installed)
+bun add nuqs
 
-# shadcn/ui components for UI (already installed)
+# shadcn/ui components (already installed)
 ```
 
 ## 🏗️ Component Structure
@@ -33,418 +34,542 @@ bun add @tanstack/react-table
 
 ```
 components/
+  table/
+    data-box.tsx                # Generic pagination component
   shared/
-    pagination-wrapper.tsx      # Generic pagination component
-    table-pagination.tsx         # Table-specific wrapper
-    card-pagination.tsx          # Card-specific wrapper
-    infinite-scroll.tsx          # Infinite scroll observer hook
+    PaginationControls.tsx      # Pagination controls (prev/next/pages/limit)
+    NoData.tsx                  # Empty state component
+    QueryErrorBoundary.tsx      # Error boundary for queries
+  cards/
+    LinkCard.Simple.tsx         # Card component for displaying items
+
+hooks/
+  useAppQuery.tsx               # Custom hook for URL params (nuqs)
+
+lib/
+  config/
+    pagination.config.ts        # Pagination config (cookie management)
 ```
 
 ## 🔧 Implementation Patterns
 
-### 1. Generic Pagination Component
+### 1. DataBox Component (`components/table/data-box.tsx`)
 
-Create a generic `PaginationWrapper` component that handles both table and card displays:
+**Generic component that handles:**
+
+- Loading states
+- Empty states
+- Card grid layout
+- Pagination controls (top and bottom)
 
 ```typescript
-// components/shared/pagination-wrapper.tsx
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
-import { LoadingSpinner } from "./loading-spinner";
-import { EmptyState } from "./empty-state";
-import { ErrorState } from "./error-state";
+import React from "react";
+import { DataTypes } from "@/types/global";
+import NoData from "../shared/NoData";
+import { PaginationControls } from "../shared/PaginationControls";
+import type { UseQueryResult } from "@tanstack/react-query";
+import type { PaginationResult } from "@/lib/react-query/actions/links.action";
 
-interface PaginationWrapperProps<T> {
-  queryKey: string[];
-  queryFn: (params: {
-    pageParam: number;
-  }) => Promise<{ data: T[]; nextPage: number | null }>;
-  renderMode: "table" | "cards";
-  // For table mode
-  columns?: any[];
-  // For card mode
-  CardComponent?: React.ComponentType<T>;
-  gridClassName?: string;
-  // Common props
-  emptyMessage?: string;
-  loadMoreButton?: boolean;
+interface DataBoxProps<T> {
+  Component: React.ComponentType<T>;
+  queryFn: () => UseQueryResult<PaginationResult<T>>;
+  onPageChange: (page: number) => void;
+  onLimitChange: (limit: number) => void;
+  currentPage: number;
+  limit: number;
 }
 
-export function PaginationWrapper<T>({
-  queryKey,
+export function DataBox<T extends DataTypes>({
   queryFn,
-  renderMode,
-  columns,
-  CardComponent,
-  gridClassName,
-  emptyMessage = "No data found",
-  loadMoreButton = false,
-}: PaginationWrapperProps<T>) {
-  const loadMoreRef = useRef<HTMLDivElement>(null);
+  Component,
+  onPageChange,
+  onLimitChange,
+  currentPage,
+  limit,
+}: DataBoxProps<T>) {
+  const { data, isLoading } = queryFn();
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey,
-    queryFn,
-    getNextPageParam: (lastPage) => lastPage.nextPage,
-    initialPageParam: 1,
-  });
+  const items = data?.data || [];
+  const total = data?.total || 0;
+  const totalPages = Math.ceil(total / limit);
 
-  // Infinite scroll observer
-  useEffect(() => {
-    if (!hasNextPage || isFetchingNextPage || loadMoreButton) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 1 }
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="h-48 bg-muted rounded-lg animate-pulse" />
+        ))}
+      </div>
     );
+  }
 
-    const node = loadMoreRef.current;
-    if (node) observer.observe(node);
-
-    return () => {
-      if (node) observer.unobserve(node);
-    };
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage, loadMoreButton]);
-
-  if (isLoading) return <LoadingSpinner />;
-  if (isError) return <ErrorState message={error?.message} />;
-
-  const allItems = data?.pages?.flatMap((page) => page.data) ?? [];
-
-  if (allItems.length === 0) {
-    return <EmptyState message={emptyMessage} />;
+  if (items.length === 0) {
+    return <NoData />;
   }
 
   return (
     <div className="w-full space-y-4">
-      {renderMode === "table" && columns ? (
-        <TableView data={allItems} columns={columns} />
-      ) : renderMode === "cards" && CardComponent ? (
-        <div
-          className={
-            gridClassName ||
-            "grid gap-4 grid-cols-[repeat(auto-fill,minmax(250px,1fr))]"
-          }>
-          {allItems.map((item, index) => (
-            <CardComponent key={index} {...(item as any)} />
-          ))}
-        </div>
-      ) : null}
+      {total > 0 && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          limit={limit}
+          total={total}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+        />
+      )}
 
-      {/* Load more trigger */}
-      {hasNextPage && (
-        <div
-          ref={loadMoreRef}
-          className="h-10 flex justify-center items-center">
-          {isFetchingNextPage && <LoadingSpinner />}
-        </div>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {items.map((val: T, i: number) => (
+          <Component key={i} {...val} />
+        ))}
+      </div>
+
+      {total > 0 && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          limit={limit}
+          total={total}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+        />
       )}
     </div>
   );
 }
 ```
 
-### 2. Table Display (TanStack Table)
+**Key Features:**
 
-**ALWAYS use TanStack Table for table displays:**
+- ✅ Generic type `<T>` for any data type
+- ✅ Loading skeleton with 6 placeholder cards
+- ✅ Empty state when no data
+- ✅ Grid layout (2 cols on md, 3 cols on lg)
+- ✅ Pagination controls at top AND bottom
+- ✅ Accepts query result function (not direct data)
+
+### 2. Pagination Controls (`components/shared/PaginationControls.tsx`)
+
+**Component that provides:**
+
+- Current page info ("Showing X-Y of Z")
+- Limit selector dropdown
+- Page navigation (prev/next/numbered pages)
 
 ```typescript
-// components/shared/table-pagination.tsx
 "use client";
 
 import {
-  useReactTable,
-  getCoreRowModel,
-  flexRender,
-  ColumnDef,
-} from "@tanstack/react-table";
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useTranslation } from "react-i18next";
 
-interface TableViewProps<T> {
-  data: T[];
-  columns: ColumnDef<T>[];
-}
+type PaginationControlsProps = {
+  currentPage: number;
+  totalPages: number;
+  limit: number;
+  total: number;
+  onPageChange: (page: number) => void;
+  onLimitChange: (limit: number) => void;
+};
 
-export function TableView<T>({ data, columns }: TableViewProps<T>) {
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
+const LIMIT_OPTIONS = [50, 100, 150, 200];
+
+export function PaginationControls({
+  currentPage,
+  totalPages,
+  limit,
+  total,
+  onPageChange,
+  onLimitChange,
+}: PaginationControlsProps) {
+  const { t } = useTranslation();
+
+  const startItem = currentPage * limit + 1;
+  const endItem = Math.min((currentPage + 1) * limit, total);
+
+  const getPageNumbers = () => {
+    const pages: (number | "ellipsis")[] = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 0; i < totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 2) {
+        pages.push(0, 1, 2, "ellipsis", totalPages - 1);
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(
+          0,
+          "ellipsis",
+          totalPages - 3,
+          totalPages - 2,
+          totalPages - 1
+        );
+      } else {
+        pages.push(
+          0,
+          "ellipsis",
+          currentPage - 1,
+          currentPage,
+          currentPage + 1,
+          "ellipsis",
+          totalPages - 1
+        );
+      }
+    }
+
+    return pages;
+  };
+
+  const pageNumbers = getPageNumbers();
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
-                  )}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows.map((row) => (
-            <TableRow key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span className="hidden sm:inline">
+          {t("pagination.showing")} {startItem}-{endItem} {t("pagination.of")}{" "}
+          {total} {t("pagination.links")}
+        </span>
+        <span className="sm:hidden">
+          {startItem}-{endItem} / {total}
+        </span>
+        <Select
+          value={limit.toString()}
+          onValueChange={(value) => onLimitChange(Number(value))}>
+          <SelectTrigger className="h-8 w-[70px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {LIMIT_OPTIONS.map((option) => (
+              <SelectItem key={option} value={option.toString()}>
+                {option}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <Pagination>
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => onPageChange(Math.max(0, currentPage - 1))}
+              className={
+                currentPage === 0
+                  ? "pointer-events-none opacity-50"
+                  : "cursor-pointer"
+              }
+            />
+          </PaginationItem>
+
+          {pageNumbers.map((pageNum, idx) =>
+            pageNum === "ellipsis" ? (
+              <PaginationItem key={`ellipsis-${idx}`}>
+                <PaginationEllipsis />
+              </PaginationItem>
+            ) : (
+              <PaginationItem key={pageNum}>
+                <PaginationLink
+                  onClick={() => onPageChange(pageNum)}
+                  isActive={currentPage === pageNum}
+                  className="cursor-pointer">
+                  {pageNum + 1}
+                </PaginationLink>
+              </PaginationItem>
+            )
+          )}
+
+          <PaginationItem>
+            <PaginationNext
+              onClick={() =>
+                onPageChange(Math.min(totalPages - 1, currentPage + 1))
+              }
+              className={
+                currentPage >= totalPages - 1
+                  ? "pointer-events-none opacity-50"
+                  : "cursor-pointer"
+              }
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
     </div>
   );
 }
 ```
 
-### 3. Card Display (shadcn Components)
+**Key Features:**
 
-**ALWAYS use shadcn components for card displays:**
+- ✅ Smart page number display with ellipsis
+- ✅ Limit selector with predefined options (50, 100, 150, 200)
+- ✅ Showing "X-Y of Z items" info
+- ✅ Responsive (mobile shows condensed view)
+- ✅ Internationalized (i18n)
+- ✅ Disabled prev/next when at boundaries
 
-```typescript
-// Example usage with LinkCard component
-import { PaginationWrapper } from "@/components/shared/pagination-wrapper";
-import { LinkCard } from "@/components/cards/link-card";
+### 3. URL Parameter Hook (`hooks/useAppQuery.tsx`)
 
-export function LinkList() {
-  return (
-    <PaginationWrapper
-      queryKey={["links"]}
-      queryFn={fetchLinks}
-      renderMode="cards"
-      CardComponent={LinkCard}
-      gridClassName="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-      emptyMessage="No links found"
-    />
-  );
-}
-```
-
-## 📐 Data Fetching Patterns
-
-### Query Function Structure
-
-All paginated query functions MUST return this structure:
+**Custom hook using nuqs for URL state:**
 
 ```typescript
-// queries/links.ts
-export async function fetchLinks({ pageParam = 1 }) {
-  const response = await fetch(`/api/links?page=${pageParam}`);
-  const data = await response.json();
+"use client";
 
-  return {
-    data: data.items,
-    nextPage: data.hasMore ? pageParam + 1 : null,
-  };
-}
-```
+import { ENUMs } from "@/lib/enums";
+import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
+import {
+  getLimitFromCookie,
+  setLimitCookie,
+} from "@/lib/config/pagination.config";
+import { useEffect, useState } from "react";
 
-### Server Action Pattern
+export function useAppQueryParams() {
+  const [cookieLimit, setCookieLimit] = useState<number>(100);
 
-```typescript
-// actions/links.ts
-"use server";
+  useEffect(() => {
+    setCookieLimit(getLimitFromCookie());
+  }, []);
 
-export async function getLinksAction(page: number = 1, limit: number = 10) {
-  const offset = (page - 1) * limit;
-
-  const links = await db.query.links.findMany({
-    limit: limit + 1, // Fetch one extra to check if there's more
-    offset,
-    orderBy: (links, { desc }) => [desc(links.createdAt)],
+  const [queries, setQueries] = useQueryStates({
+    [ENUMs.PARAMS.PAGE]: parseAsInteger.withDefault(0),
+    [ENUMs.PARAMS.LIMIT]: parseAsInteger.withDefault(cookieLimit),
+    [ENUMs.PARAMS.SEARCH]: parseAsString.withDefault(""),
   });
 
-  const hasMore = links.length > limit;
-  const items = hasMore ? links.slice(0, -1) : links;
+  const removeAllQueries = () => {
+    setQueries(null);
+  };
+
+  const setLimit = (limit: number) => {
+    setLimitCookie(limit);
+    setQueries({ limit, page: 0 });
+  };
 
   return {
-    data: items,
-    nextPage: hasMore ? page + 1 : null,
+    queries,
+    setQueries,
+    removeAllQueries,
+    setLimit,
   };
 }
 ```
 
-## 🎨 Display Mode Guidelines
+**Key Features:**
 
-### When to Use Tables
+- ✅ **Page**: 0-based index (page 0 = first page)
+- ✅ **Limit**: Stored in cookie, synced to URL
+- ✅ **Search**: Empty string by default
+- ✅ **Reset to page 0** when changing limit or search
+- ✅ Cookies persist user's limit preference
 
-- **Data-heavy listings**: Multiple columns of structured data
-- **Comparison views**: When users need to compare values across rows
-- **Admin dashboards**: Managing records with actions
-- **Reports**: Analytics and metrics displays
+### 4. Pagination Config (`lib/config/pagination.config.ts`)
 
-### When to Use Cards
-
-- **Visual content**: Links with preview images, QR codes
-- **Rich metadata**: Multiple fields with icons and badges
-- **Mobile-first**: Better responsive experience
-- **User-facing**: Public-facing link galleries
-
-## 🔄 Loading States
+**Cookie management for limit preference:**
 
 ```typescript
-// components/shared/loading-spinner.tsx
-export function LoadingSpinner() {
-  return (
-    <div className="flex justify-center items-center p-8">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-    </div>
-  );
-}
-```
+import { getCookie, setCookie } from "./cookie.config";
 
-## 📊 Grid Layouts by Page Type
+const LIMIT_COOKIE_NAME = "pagination_limit";
+const VALID_LIMITS = [50, 100, 150, 200] as const;
+const DEFAULT_LIMIT = 100;
 
-```typescript
-const gridClasses = {
-  // Two columns on medium+
-  twoColumn: "grid gap-4 grid-cols-1 md:grid-cols-2",
+export const getLimitFromCookie = (): number => {
+  const cookieValue = getCookie(LIMIT_COOKIE_NAME);
+  if (!cookieValue) return DEFAULT_LIMIT;
 
-  // Three columns responsive
-  threeColumn: "grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+  const parsedLimit = parseInt(cookieValue, 10);
 
-  // Auto-fill with min width
-  autoFill: "grid gap-4 grid-cols-[repeat(auto-fill,minmax(250px,1fr))]",
+  if (VALID_LIMITS.includes(parsedLimit as any)) {
+    return parsedLimit;
+  }
 
-  // Single column (forms, detailed views)
-  singleColumn: "grid gap-4 grid-cols-1",
+  return DEFAULT_LIMIT;
+};
+
+export const setLimitCookie = (limit: number): void => {
+  if (VALID_LIMITS.includes(limit as any)) {
+    setCookie(LIMIT_COOKIE_NAME, limit.toString(), 30);
+  }
 };
 ```
 
-## 🚫 Anti-Patterns
+## 🎨 Usage in Pages
 
-**❌ DO NOT:**
-
-- Create separate pagination components for each page
-- Use third-party pagination libraries (e.g., react-paginate)
-- Implement offset-based pagination without infinite scroll
-- Mix table and card rendering logic in the same component
-- Use non-shadcn components for cards
-- Use non-TanStack solutions for tables
-- Hardcode page-specific logic in the generic component
-
-**✅ DO:**
-
-- Use the generic `PaginationWrapper` component
-- Keep table and card logic separated
-- Use TanStack Table for ALL table displays
-- Use shadcn components for ALL card displays
-- Handle loading and empty states consistently
-- Support both auto-scroll and button-based pagination
-
-## 📝 Usage Examples
-
-### Table Example (Admin Dashboard)
-
-```typescript
-// app/admin/links/page.tsx
-import { PaginationWrapper } from "@/components/shared/pagination-wrapper";
-import { ColumnDef } from "@tanstack/react-table";
-import { Link } from "@/db/schema";
-
-const columns: ColumnDef<Link>[] = [
-  { accessorKey: "code", header: "Code" },
-  { accessorKey: "originalUrl", header: "URL" },
-  { accessorKey: "clicks", header: "Clicks" },
-];
-
-export default function LinksPage() {
-  return (
-    <PaginationWrapper
-      queryKey={["admin-links"]}
-      queryFn={fetchAdminLinks}
-      renderMode="table"
-      columns={columns}
-    />
-  );
-}
-```
-
-### Card Example (User Dashboard)
+### Complete Page Example
 
 ```typescript
 // app/dashboard/page.tsx
-import { PaginationWrapper } from "@/components/shared/pagination-wrapper";
-import { LinkCard } from "@/components/cards/link-card";
+"use client";
+
+import Page from "@/containers/Page";
+import { DataBox } from "@/components/table/data-box";
+import type { Link } from "@/lib/db/schema";
+import { SimpleLinkCard } from "@/components/cards/LinkCard.Simple";
+import { useGetLinks } from "@/lib/react-query/queries/links.query";
+import { useAppQueryParams } from "@/hooks/useAppQuery";
+import { QueryErrorBoundary } from "@/components/shared/QueryErrorBoundary";
 
 export default function DashboardPage() {
+  const { queries, setQueries, setLimit } = useAppQueryParams();
+
+  const queryResult = useGetLinks({
+    queries,
+  });
+
+  const handlePageChange = (page: number) => {
+    setQueries({ page });
+  };
+
+  const handleLimitChange = (limit: number) => {
+    setLimit(limit);
+  };
+
   return (
-    <PaginationWrapper
-      queryKey={["user-links"]}
-      queryFn={fetchUserLinks}
-      renderMode="cards"
-      CardComponent={LinkCard}
-      gridClassName="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
-    />
+    <Page search={true} parameters={[]} statusCards={false} extraFilter={false}>
+      <QueryErrorBoundary>
+        <DataBox<Link>
+          queryFn={() => queryResult}
+          Component={SimpleLinkCard}
+          onPageChange={handlePageChange}
+          onLimitChange={handleLimitChange}
+          currentPage={queries.page}
+          limit={queries.limit}
+        />
+      </QueryErrorBoundary>
+    </Page>
   );
 }
 ```
 
-## 🔍 Search & Filters Integration
+**Flow:**
+
+1. ✅ `useAppQueryParams` gets page/limit/search from URL
+2. ✅ `useGetLinks` fetches data with those parameters
+3. ✅ `DataBox` renders cards with pagination controls
+4. ✅ `handlePageChange` updates URL (triggers refetch)
+5. ✅ `handleLimitChange` updates URL + cookie (triggers refetch)
+
+## 📊 Server Action Pattern
+
+Server actions MUST support pagination:
 
 ```typescript
-// Integrate with query params
-import { useSearchParams } from "next/navigation";
+export const getLinks = async (
+  userId: string,
+  queries?: QueryParam
+): Promise<PaginationResult<Link>> => {
+  const page = Number(queries?.page) || 0;
+  const limit = Number(queries?.limit) || 100;
+  const search = (queries?.search as string) || "";
 
-export function FilteredLinkList() {
-  const searchParams = useSearchParams();
-  const search = searchParams.get("search") || "";
+  const offset = page * limit;
 
-  return (
-    <PaginationWrapper
-      queryKey={["links", { search }]}
-      queryFn={({ pageParam }) => fetchLinks({ pageParam, search })}
-      renderMode="cards"
-      CardComponent={LinkCard}
-    />
-  );
-}
+  const [data, totalResult] = await Promise.all([
+    db
+      .select()
+      .from(links)
+      .where(/* conditions */)
+      .orderBy(desc(links.createdAt))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(links)
+      .where(/* same conditions */),
+  ]);
+
+  const total = totalResult[0]?.count || 0;
+
+  return {
+    data,
+    total,
+    hasMore: offset + data.length < total,
+  };
+};
 ```
 
-## ✅ Checklist
+## 🚫 Common Mistakes
 
-Before implementing pagination:
+❌ **DON'T use 1-based page indexing:**
 
-- [ ] Choose correct display mode (table vs cards)
-- [ ] Use `PaginationWrapper` component
-- [ ] For tables: Define TanStack Table columns
-- [ ] For cards: Create shadcn-based card component
-- [ ] Implement query function with correct return type
-- [ ] Add loading, empty, and error states
-- [ ] Test infinite scroll behavior
-- [ ] Verify responsive grid layout
-- [ ] Integrate search/filter params if needed
+```typescript
+const page = Number(queries?.page) || 1;
+```
 
----
+❌ **DON'T use infinite scroll (this project uses manual pagination):**
 
-**Questions?** Refer to [Data Fetching](data-fetching.md) for query patterns and [UI Components](ui-components.md) for shadcn usage.
+```typescript
+const { fetchNextPage } = useInfiniteQuery(/* ... */);
+```
+
+❌ **DON'T use TanStack Table (this project uses cards):**
+
+```typescript
+import { useReactTable } from "@tanstack/react-table";
+```
+
+❌ **DON'T forget to pass both handlers:**
+
+```typescript
+<DataBox queryFn={() => queryResult} Component={SimpleLinkCard} />
+```
+
+❌ **DON'T manage page state locally:**
+
+```typescript
+const [page, setPage] = useState(0);
+```
+
+## ✅ Best Practices
+
+- ✅ **0-based page indexing** (page 0 = first page)
+- ✅ **Cookie for limit preference** (persists across sessions)
+- ✅ **Reset to page 0** when changing filters or limit
+- ✅ **URL as single source of truth** for pagination state
+- ✅ **Parallel queries** for data + count in server actions
+- ✅ **Loading skeletons** matching the grid layout
+- ✅ **Pagination controls** at both top and bottom
+- ✅ **Generic DataBox** for all paginated data
+- ✅ **Card-based display** (no tables)
+- ✅ **Type-safe** with generics
+
+## 📋 Pagination Limits
+
+Valid limit options (defined in `PaginationControls.tsx`):
+
+- 50 items per page
+- 100 items per page (default)
+- 150 items per page
+- 200 items per page
+
+## 🎯 Summary
+
+**This project uses:**
+
+- ✅ Manual pagination (NOT infinite scroll)
+- ✅ Card displays (NOT tables)
+- ✅ DataBox component (generic, reusable)
+- ✅ nuqs for URL state (page, limit, search)
+- ✅ Cookies for limit preference
+- ✅ 0-based page indexing
+- ✅ PaginationControls at top and bottom
+- ✅ Smart page number display with ellipsis
+- ✅ Responsive design

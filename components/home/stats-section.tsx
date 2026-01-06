@@ -37,8 +37,10 @@ function AnimatedNumber({
   }, [springValue]);
 
   return (
-    <span ref={ref}>
-      <span ref={displayValue}>0</span>
+    <span ref={ref} className="english_font">
+      <span className="english_font" ref={displayValue}>
+        0
+      </span>
       {suffix}
     </span>
   );
@@ -94,7 +96,7 @@ function StatCard({
       whileHover={{ scale: 1.05 }}
       className="space-y-2 p-6 rounded-2xl bg-gradient-to-br from-background to-muted border border-border hover:border-violet-200 dark:hover:border-violet-800 transition-all duration-300 shadow-sm hover:shadow-lg">
       <div
-        className={`text-4xl md:text-5xl font-bold bg-gradient-to-r ${statGradients[index]} bg-clip-text text-transparent`}>
+        className={`english_font text-4xl md:text-5xl font-bold bg-gradient-to-r ${statGradients[index]} bg-clip-text text-transparent`}>
         {prefix}
         <AnimatedNumber value={value} suffix={suffix} />
       </div>

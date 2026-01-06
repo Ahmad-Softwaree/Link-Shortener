@@ -78,6 +78,18 @@
     "copy": "Copy",
     "visit": "Visit"
   },
+  "pagination": {
+    "showing": "Showing",
+    "of": "of",
+    "links": "links",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "error": {
+    "something_went_wrong": "Something went wrong",
+    "unknown_error": "An unknown error occurred",
+    "retry": "Try Again"
+  },
   "filter": {
     "status": "Status",
     "all": "All",
@@ -139,6 +151,11 @@
       "button": "Create Your Account"
     },
     "footer": {
+      "description": "Transform your long URLs into short, shareable links instantly. Track, manage, and optimize your links with ease.",
+      "quick_links": "Quick Links",
+      "connect": "Connect",
+      "github": "GitHub",
+      "portfolio": "Portfolio",
       "copyright": "© 2026 Link Shortener. All rights reserved."
     }
   }

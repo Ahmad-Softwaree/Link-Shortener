@@ -1,439 +1,706 @@
 # Actions & Queries Architecture
 
-> **⚠️ CRITICAL: Generic First, Specific Only When Needed**  
-> Use generic CRUD functions for all standard operations. Only create table-specific files when custom logic is required.
+> **⚠️ CRITICAL: Table-Specific Pattern**  
+> This project uses a table-specific pattern. Each database table has its own action and query file.
+
+**Last Updated**: January 6, 2026  
+**Version**: 1.0.0
 
 ## 📋 Overview
 
-This project uses a **generic actions and queries pattern** to minimize code duplication and maintain consistency across all data operations.
+This project uses **React Query (TanStack Query)** with **Server Actions** for all data operations:
 
-- **Actions** (`/actions`) - Server-side data fetching and mutations
-- **Queries** (`/queries`) - TanStack Query hooks that wrap actions with caching, optimistic updates, and error handling
+- **Actions** (`/lib/react-query/actions`) - Server-side data fetching and mutations using Drizzle ORM
+- **Queries** (`/lib/react-query/queries`) - TanStack Query hooks that wrap actions with caching and optimistic updates
+- **Keys** (`/lib/react-query/keys.ts`) - Centralized query key definitions
 
 ## 🗂️ File Structure
 
 ```
-actions/
-  actions.ts          # Generic CRUD functions (USE THIS FIRST)
-  [table-name].ts     # Only create if custom logic needed
-
-queries/
-  queries.ts          # Generic TanStack Query hooks (USE THIS FIRST)
-  [table-name].ts     # Only create if custom logic needed
+lib/
+  react-query/
+    keys.ts                    # Centralized query keys for all tables
+    actions/
+      [table-name].action.ts   # Server actions per table (e.g., links.action.ts)
+    queries/
+      [table-name].query.ts    # React Query hooks per table (e.g., links.query.ts)
 ```
 
-### When to Create Table-Specific Files
+### File Creation Rules
 
-**❌ DON'T create specific files for:**
+**✅ ALWAYS create table-specific files:**
 
-- Standard CRUD operations
-- Simple filtering/searching
-- Pagination
-- Soft delete/restore
+- One action file per database table: `[table-name].action.ts`
+- One query file per database table: `[table-name].query.ts`
+- Add query keys to `keys.ts` for each table
 
-**✅ DO create specific files when:**
+## 🔑 Query Keys (`/lib/react-query/keys.ts`)
 
-- Complex business logic required
-- Multiple related operations in a transaction
-- Custom validation or transformation
-- Specialized endpoints
-
-## 🔧 Generic Actions (`actions/actions.ts`)
-
-### Core Functions
-
-All generic actions must support these operations:
+Define hierarchical query keys for each table:
 
 ```typescript
-// 1. Get paginated or full data
-getData<T>(name: string, queries?: QueryParam, id?: number): Promise<PaginationType<T> | T>
-
-// 2. Get selection data (for dropdowns, etc.)
-getDataSelection<T>(name: string, queries?: QueryParam): Promise<T[]>
-
-// 3. Get single record
-getOneData<T>(name: string, id: number, queries?: QueryParam): Promise<T>
-
-// 4. Add new record
-addData<T>(name: string, form: T, queries?: QueryParam): Promise<CRUDReturn>
-
-// 5. Update existing record
-updateData<T>(name: string, form: T, id: number, queries?: QueryParam): Promise<CRUDReturn>
-
-// 6. Change state (soft delete/restore OR hard delete)
-changeStateData(name: string, id: number, queries?: QueryParam): Promise<CRUDReturn>
-```
-
-### Implementation Requirements
-
-#### URL Building
-
-Always use a helper to build URLs with query parameters:
-
-```typescript
-const buildUrl = (baseUrl: string, queries?: QueryParam) => {
-  if (!queries || Object.keys(queries).length === 0) return baseUrl;
-
-  const queryString = buildQueryString(queries);
-
-  return baseUrl.includes("?")
-    ? `${baseUrl}&${queryString}`
-    : `${baseUrl}?${queryString}`;
+export const links = {
+  all: () => ["links"] as const,
+  lists: () => [...links.all(), "list"] as const,
+  list: (filters?: Record<string, any>) => [...links.lists(), filters] as const,
+  details: () => [...links.all(), "detail"] as const,
+  detail: (id: number) => [...links.details(), id] as const,
 };
 ```
 
-#### Error Handling
+### Query Key Pattern
 
-**⚠️ ALWAYS generate and throw formatted errors:**
+- `all()` - Base key for all link queries
+- `lists()` - Key for all list queries
+- `list(filters)` - Key for specific list with filters
+- `details()` - Key for all detail queries
+- `detail(id)` - Key for specific detail query
+
+## 🔧 Server Actions (`/lib/react-query/actions/[table-name].action.ts`)
+
+### Required Type Definitions
+
+Every action file MUST define these types at the top:
 
 ```typescript
-try {
-  // ... operation
-} catch (error: any) {
-  throw generateNestErrors(error); // or your error formatter
-}
+export type CRUDReturn = { message: string; data?: any };
+
+export type PaginationResult<T> = {
+  data: T[];
+  total: number;
+  hasMore: boolean;
+};
 ```
 
-#### File Upload Detection
+### Standard Functions Pattern
 
-Support both JSON and FormData automatically:
+Implement these operations as needed for your table:
 
-```typescript
-const dataToSend = isFileForm(form) ? buildFormData(form) : form;
+1. **Get paginated data with search/filters**
+2. **Get single record by ID**
+3. **Add new record**
+4. **Update existing record**
+5. **Delete record**
 
-const { data } = await(
-  isFileForm(form)
-    ? fileApi.post(fullUrl, dataToSend) // Use file API for FormData
-    : authApi.post(fullUrl, dataToSend) // Use auth API for JSON
-);
-```
+### 1. Get Paginated Data with Search/Filters
 
-#### Soft Delete vs Hard Delete
-
-**🚨 CRITICAL: Always check database schema first!**
+**Pattern:**
 
 ```typescript
-// changeStateData implementation
-export const changeStateData = async (
-  name: string,
-  id: number,
+export const getLinks = async (
+  userId: string,
   queries?: QueryParam
-): Promise<CRUDReturn> => {
-  try {
-    // Check if table has soft delete columns (deleted_at, is_deleted, etc.)
-    // IF SOFT DELETE EXISTS:
-    //   - Use PUT/PATCH to toggle soft delete state
-    //   - Support both delete and restore
-    // IF NO SOFT DELETE:
-    //   - Use DELETE for hard delete
+): Promise<PaginationResult<Link>> => {
+  const page = Number(queries?.page) || 0;
+  const limit = Number(queries?.limit) || 100;
+  const search = (queries?.search as string) || "";
 
-    const fullUrl = buildUrl(`${API_BASE}/${name}/${id}`, queries);
+  const offset = page * limit;
 
-    // Example for soft delete:
-    const { data } = await authApi.put(fullUrl, { deleted: true });
+  const whereConditions: any[] = [eq(links.userId, userId)];
 
-    // Example for hard delete:
-    // const { data } = await authApi.delete(fullUrl);
-
-    return data;
-  } catch (error: any) {
-    throw generateNestErrors(error);
+  if (search) {
+    whereConditions.push(
+      or(
+        ilike(links.shortCode, `%${search}%`),
+        ilike(links.originalUrl, `%${search}%`)
+      )!
+    );
   }
+
+  const [data, totalResult] = await Promise.all([
+    db
+      .select()
+      .from(links)
+      .where(
+        whereConditions.length === 1
+          ? whereConditions[0]
+          : and(...whereConditions)
+      )
+      .orderBy(desc(links.createdAt))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(links)
+      .where(
+        whereConditions.length === 1
+          ? whereConditions[0]
+          : and(...whereConditions)
+      ),
+  ]);
+
+  const total = totalResult[0]?.count || 0;
+
+  return {
+    data,
+    total,
+    hasMore: offset + data.length < total,
+  };
 };
 ```
 
-## 🎣 Generic Queries (`queries/queries.ts`)
+**Key Points:**
 
-### Core Hooks
+- ✅ Use parallel queries for data and count
+- ✅ Support pagination with `page` and `limit`
+- ✅ Support search across multiple fields
+- ✅ Always filter by userId for security
+- ✅ Return `PaginationResult` type
 
-All generic queries must provide these hooks:
+### 2. Get Single Record by ID
+
+**Pattern:**
 
 ```typescript
-// 1. Get data (paginated or full)
-useGetData<T>(queryKey: [string, QueryParam])
+export const getLink = async (
+  id: number,
+  userId: string
+): Promise<Link | null> => {
+  const result = await db
+    .select()
+    .from(links)
+    .where(and(eq(links.id, id), eq(links.userId, userId)))
+    .limit(1);
 
-// 2. Get selection data
-useGetSelectionData<T>(name: string, queries?: QueryParam)
-
-// 3. Get one record
-useGetOneData<T>(name: string, id: number, queries?: QueryParam)
-
-// 4. Add data mutation
-useAddData<T>(name: string, queries?: QueryParam)
-
-// 5. Update data mutation
-useUpdateData<T>(name: string, id: number, queries?: QueryParam)
-
-// 6. Change state mutation (delete/restore)
-useChangeStateData(name: string, queries?: QueryParam)
+  return result[0] || null;
+};
 ```
 
-### Implementation Requirements
+**Key Points:**
 
-#### Query Keys
+- ✅ Verify userId ownership
+- ✅ Return `null` if not found
+- ✅ Use `limit(1)` for performance
 
-**⚠️ CRITICAL: Query params come from nuqs!**
+### 3. Add New Record
+
+**Pattern:**
 
 ```typescript
-// Query key structure: [table-name, query-params]
-export function useGetData<T>(queryKey: [string, QueryParam]) {
-  const [name, params] = queryKey;
+export const addLink = async (
+  form: Omit<NewLink, "userId">,
+  userId: string
+): Promise<CRUDReturn> => {
+  const existing = await db
+    .select()
+    .from(links)
+    .where(eq(links.shortCode, form.shortCode))
+    .limit(1);
+
+  if (existing.length > 0) {
+    throw new Error("Short code already exists");
+  }
+
+  const [newLink] = await db
+    .insert(links)
+    .values({ ...form, userId })
+    .returning();
+
+  return {
+    message: "Link created successfully",
+    data: newLink,
+  };
+};
+```
+
+**Key Points:**
+
+- ✅ Validate before inserting (check uniqueness, etc.)
+- ✅ Inject userId from server
+- ✅ Use `.returning()` to get created record
+- ✅ Throw errors for validation failures
+- ✅ Return `CRUDReturn` type
+
+### 4. Update Existing Record
+
+**Pattern:**
+
+```typescript
+export const updateLink = async (
+  id: number,
+  form: Partial<Omit<NewLink, "userId">>,
+  userId: string
+): Promise<CRUDReturn> => {
+  const [updatedLink] = await db
+    .update(links)
+    .set(form)
+    .where(and(eq(links.id, id), eq(links.userId, userId)))
+    .returning();
+
+  if (!updatedLink) {
+    throw new Error("Link not found or unauthorized");
+  }
+
+  return {
+    message: "Link updated successfully",
+    data: updatedLink,
+  };
+};
+```
+
+**Key Points:**
+
+- ✅ Use `Partial` for optional fields
+- ✅ Verify userId ownership in WHERE clause
+- ✅ Check if record was updated
+- ✅ Throw error if not found/unauthorized
+
+### 5. Delete Record
+
+**Pattern:**
+
+```typescript
+export const deleteLink = async (
+  id: number,
+  userId: string
+): Promise<CRUDReturn> => {
+  const [deletedLink] = await db
+    .delete(links)
+    .where(and(eq(links.id, id), eq(links.userId, userId)))
+    .returning();
+
+  if (!deletedLink) {
+    throw new Error("Link not found or unauthorized");
+  }
+
+  return {
+    message: "Link deleted successfully",
+    data: deletedLink,
+  };
+};
+```
+
+**Key Points:**
+
+- ✅ HARD DELETE (no soft delete in this project)
+- ✅ Verify userId ownership
+- ✅ Check if record was deleted
+- ✅ Throw error if not found/unauthorized
+
+## 🎣 React Query Hooks (`/lib/react-query/queries/[table-name].query.ts`)
+
+### Required Imports
+
+```typescript
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@clerk/nextjs";
+import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+import { useModalStore } from "@/lib/store/modal.store";
+import {
+  getLinks,
+  getLink,
+  addLink,
+  updateLink,
+  deleteLink,
+  type PaginationResult,
+  type CRUDReturn,
+} from "../actions/links.action";
+import type { QueryParam } from "@/types/global";
+import type { Link, NewLink } from "@/lib/db/schema";
+import { links } from "../keys";
+```
+
+### Standard Hooks Pattern
+
+Implement these hooks as needed:
+
+1. **Query: Get paginated data with filters**
+2. **Query: Get single record by ID**
+3. **Mutation: Add new record**
+4. **Mutation: Update existing record**
+5. **Mutation: Delete record**
+
+### 1. Query: Get Paginated Data
+
+**Pattern:**
+
+```typescript
+type UseGetLinksOptions = {
+  queries?: QueryParam;
+  enabled?: boolean;
+};
+
+export function useGetLinks({
+  queries,
+  enabled = true,
+}: UseGetLinksOptions = {}) {
+  const { userId } = useAuth();
 
   return useQuery({
-    queryKey: [name, params],
-    queryFn: async (): Promise<PaginationType<T> | T> => {
-      return await getData<T>(name, params);
-    },
+    queryKey: links.list(queries),
+    queryFn: (): Promise<PaginationResult<Link>> => getLinks(userId!, queries),
     retry: 0,
+    enabled: !!userId && enabled,
   });
 }
 ```
 
-#### Toast Notifications
+**Key Points:**
 
-**🚨 CRITICAL: ALWAYS handle toasts in queries/actions, NEVER in components!**
+- ✅ Get userId from `useAuth()`
+- ✅ Use query key with filters from `keys.ts`
+- ✅ Set `retry: 0` (no retries on error)
+- ✅ Enable only when userId exists
+- ✅ Support optional `enabled` prop
+
+### 2. Query: Get Single Record
+
+**Pattern:**
 
 ```typescript
-export const useUpdateData = <T>(
-  name: string,
-  id: number,
-  queries?: QueryParam
-) => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (form: T): Promise<CRUDReturn> =>
-      updateData<T>(name, form, id, queries),
-    onSuccess: ({ message }) => {
-      // ✅ Toast here, not in component
-      toast.success(message);
-
-      // Invalidate queries
-      invalidateQueries(queryClient, name);
-    },
-    onError: (error: NestError) => {
-      // ✅ Error toast here, not in component
-      generateNestErrors(error); // This should handle toast
-    },
-  });
+type UseGetLinkOptions = {
+  id: number;
+  enabled?: boolean;
 };
-```
 
-#### UI State Management
+export function useGetLink({ id, enabled = true }: UseGetLinkOptions) {
+  const { userId } = useAuth();
 
-Support both dialog and sheet patterns:
-
-```typescript
-// For sheet-based UI
-import { useSheetStore } from "@/lib/store/sheet.store";
-
-export const useAddData = <T>(name: string, queries?: QueryParam) => {
-  const queryClient = useQueryClient();
-  const { closeSheet } = useSheetStore(); // If using sheets
-
-  return useMutation({
-    mutationFn: async (form: T) => addData<T>(name, form, queries),
-    onSuccess: ({ message }) => {
-      toast.success(message);
-      closeSheet(); // or closeDialog() if using dialogs
-      invalidateQueries(queryClient, name);
-    },
-    onError: (error) => generateNestErrors(error),
-  });
-};
-```
-
-#### Query Invalidation
-
-Always invalidate related queries after mutations:
-
-```typescript
-const invalidateQueries = (queryClient: QueryClient, name: string) => {
-  queryClient.invalidateQueries({ queryKey: [name] });
-};
-```
-
-#### Conditional Queries
-
-Use `enabled` option for conditional fetching:
-
-```typescript
-export const useGetOneData = <T>(
-  name: string,
-  id: number,
-  queries?: QueryParam
-) => {
   return useQuery({
-    queryKey: [name, id],
-    queryFn: (): Promise<T> => getOneData(name, id, queries),
+    queryKey: links.detail(id),
+    queryFn: (): Promise<Link | null> => getLink(id, userId!),
     retry: 0,
-    enabled: !!id, // Only fetch when ID is available
+    enabled: !!userId && !!id && enabled,
   });
-};
+}
 ```
 
-## 📦 Integration with nuqs
+**Key Points:**
 
-Query parameters should ALWAYS come from nuqs state management:
+- ✅ Require id in options
+- ✅ Enable only when userId AND id exist
+- ✅ Use detail query key
+
+### 3. Mutation: Add New Record
+
+**🚨 CRITICAL: Toast notifications ALWAYS in mutations, NEVER in components!**
+
+**Pattern:**
+
+```typescript
+type UseAddLinkOptions = {
+  closeTheModal?: boolean;
+  successMessage?: string;
+};
+
+export function useAddLink({
+  closeTheModal = true,
+  successMessage,
+}: UseAddLinkOptions = {}) {
+  const { userId } = useAuth();
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+  const { closeModal } = useModalStore();
+
+  return useMutation({
+    mutationFn: async (form: Omit<NewLink, "userId">): Promise<CRUDReturn> =>
+      addLink(form, userId!),
+    onSuccess: ({ message }) => {
+      toast.success(successMessage || message || t("toast.link_created"));
+      if (closeTheModal) closeModal();
+      return queryClient.invalidateQueries({
+        queryKey: links.lists(),
+      });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t("toast.error_occurred"));
+    },
+  });
+}
+```
+
+**Key Points:**
+
+- ✅ Toast in `onSuccess` and `onError`
+- ✅ Support custom success message
+- ✅ Optional modal close
+- ✅ Invalidate list queries
+- ✅ Use translations
+
+### 4. Mutation: Update Existing Record
+
+**Pattern:**
+
+```typescript
+type UseUpdateLinkOptions = {
+  closeTheModal?: boolean;
+  successMessage?: string;
+};
+
+export function useUpdateLink({
+  closeTheModal = true,
+  successMessage,
+}: UseUpdateLinkOptions = {}) {
+  const { userId } = useAuth();
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+  const { closeModal } = useModalStore();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      form,
+    }: {
+      id: number;
+      form: Partial<Omit<NewLink, "userId">>;
+    }): Promise<CRUDReturn> => updateLink(id, form, userId!),
+    onSuccess: ({ message }) => {
+      toast.success(successMessage || message || t("toast.link_updated"));
+      if (closeTheModal) closeModal();
+      return queryClient.invalidateQueries({
+        queryKey: links.lists(),
+      });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t("toast.error_occurred"));
+    },
+  });
+}
+```
+
+**Key Points:**
+
+- ✅ Accept both `id` and `form` in mutation
+- ✅ Same pattern as add mutation
+
+### 5. Mutation: Delete Record
+
+**Pattern:**
+
+```typescript
+type UseDeleteLinkOptions = {
+  successMessage?: string;
+};
+
+export function useDeleteLink({ successMessage }: UseDeleteLinkOptions = {}) {
+  const { userId } = useAuth();
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation({
+    mutationFn: async (id: number): Promise<CRUDReturn> =>
+      deleteLink(id, userId!),
+    onSuccess: ({ message }) => {
+      toast.success(successMessage || message || t("toast.link_deleted"));
+      return queryClient.invalidateQueries({
+        queryKey: links.lists(),
+      });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t("toast.error_occurred"));
+    },
+  });
+}
+```
+
+**Key Points:**
+
+- ✅ No modal close (delete is usually from list/card)
+- ✅ Just take id as parameter
+- ✅ Same toast pattern
+
+## 📦 Integration with URL Parameters (nuqs)
+
+Query parameters ALWAYS come from the `useAppQueryParams` hook:
 
 ```typescript
 // In component
-const [search, setSearch] = useQueryState("search");
-const [page, setPage] = useQueryState("page", parseAsInteger.withDefault(1));
-const [filter, setFilter] = useQueryState("filter");
+const { queries, setQueries, setLimit } = useAppQueryParams();
 
 // Pass to query hook
-const { data } = useGetData<Link>(["links", { search, page, filter }]);
-```
+const queryResult = useGetLinks({ queries });
 
-## 🎯 Usage Examples
-
-### Standard CRUD Operations
-
-```typescript
-// ✅ GOOD: Use generic hooks
-import { useGetData, useAddData, useUpdateData } from "@/queries/queries";
-
-function LinkList() {
-  const [search] = useQueryState("search");
-  const [page] = useQueryState("page", parseAsInteger.withDefault(1));
-
-  const { data } = useGetData<Link>(["links", { search, page }]);
-  const addLink = useAddData<LinkFormData>("links");
-
-  const handleAdd = (formData: LinkFormData) => {
-    addLink.mutate(formData); // Toast handled in hook
-  };
-
-  return <div>{/* ... */}</div>;
-}
-```
-
-### Custom Operations
-
-```typescript
-// ❌ DON'T: Create specific file for simple operations
-// actions/links.ts - NOT NEEDED
-export const getLinks = async () => getData<Link>("links");
-
-// ✅ DO: Create specific file only for complex logic
-// actions/links.ts - ONLY IF NEEDED
-export const generateShortCode = async (url: string) => {
-  // Complex custom logic here
-  const shortCode = await customAlgorithm(url);
-  return shortCode;
+// Handle pagination
+const handlePageChange = (page: number) => {
+  setQueries({ page });
 };
 
-// queries/links.ts
-export const useGenerateShortCode = () => {
+const handleLimitChange = (limit: number) => {
+  setLimit(limit);
+};
+```
+
+## 🎯 Complete Example
+
+### links.action.ts
+
+```typescript
+"use server";
+
+import { db } from "@/lib/db";
+import { links, type Link, type NewLink } from "@/lib/db/schema";
+import { eq, ilike, or, and, desc, sql } from "drizzle-orm";
+import type { QueryParam } from "@/types/global";
+
+export type CRUDReturn = { message: string; data?: any };
+
+export type PaginationResult<T> = {
+  data: T[];
+  total: number;
+  hasMore: boolean;
+};
+
+export const getLinks = async (
+  userId: string,
+  queries?: QueryParam
+): Promise<PaginationResult<Link>> => {
+  const page = Number(queries?.page) || 0;
+  const limit = Number(queries?.limit) || 100;
+  const search = (queries?.search as string) || "";
+  const offset = page * limit;
+
+  const whereConditions: any[] = [eq(links.userId, userId)];
+
+  if (search) {
+    whereConditions.push(
+      or(
+        ilike(links.shortCode, `%${search}%`),
+        ilike(links.originalUrl, `%${search}%`)
+      )!
+    );
+  }
+
+  const [data, totalResult] = await Promise.all([
+    db
+      .select()
+      .from(links)
+      .where(
+        whereConditions.length === 1
+          ? whereConditions[0]
+          : and(...whereConditions)
+      )
+      .orderBy(desc(links.createdAt))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(links)
+      .where(
+        whereConditions.length === 1
+          ? whereConditions[0]
+          : and(...whereConditions)
+      ),
+  ]);
+
+  const total = totalResult[0]?.count || 0;
+
+  return {
+    data,
+    total,
+    hasMore: offset + data.length < total,
+  };
+};
+
+export const addLink = async (
+  form: Omit<NewLink, "userId">,
+  userId: string
+): Promise<CRUDReturn> => {
+  const existing = await db
+    .select()
+    .from(links)
+    .where(eq(links.shortCode, form.shortCode))
+    .limit(1);
+
+  if (existing.length > 0) {
+    throw new Error("Short code already exists");
+  }
+
+  const [newLink] = await db
+    .insert(links)
+    .values({ ...form, userId })
+    .returning();
+
+  return {
+    message: "Link created successfully",
+    data: newLink,
+  };
+};
+```
+
+### links.query.ts
+
+```typescript
+"use client";
+
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@clerk/nextjs";
+import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+import { useModalStore } from "@/lib/store/modal.store";
+import {
+  getLinks,
+  addLink,
+  type PaginationResult,
+  type CRUDReturn,
+} from "../actions/links.action";
+import type { Link, NewLink } from "@/lib/db/schema";
+import { links } from "../keys";
+
+export function useGetLinks({ queries, enabled = true } = {}) {
+  const { userId } = useAuth();
+
+  return useQuery({
+    queryKey: links.list(queries),
+    queryFn: (): Promise<PaginationResult<Link>> => getLinks(userId!, queries),
+    retry: 0,
+    enabled: !!userId && enabled,
+  });
+}
+
+export function useAddLink({ closeTheModal = true, successMessage } = {}) {
+  const { userId } = useAuth();
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+  const { closeModal } = useModalStore();
+
   return useMutation({
-    mutationFn: (url: string) => generateShortCode(url),
-    onSuccess: (shortCode) => {
-      toast.success(`Short code generated: ${shortCode}`);
+    mutationFn: async (form: Omit<NewLink, "userId">): Promise<CRUDReturn> =>
+      addLink(form, userId!),
+    onSuccess: ({ message }) => {
+      toast.success(successMessage || message || t("toast.link_created"));
+      if (closeTheModal) closeModal();
+      return queryClient.invalidateQueries({ queryKey: links.lists() });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || t("toast.error_occurred"));
     },
   });
-};
-```
-
-### Soft Delete Example
-
-```typescript
-// Component using soft delete
-import { useChangeStateData } from "@/queries/queries";
-
-function LinkActions({ linkId }: { linkId: number }) {
-  const deleteLink = useChangeStateData("links");
-
-  const handleDelete = () => {
-    deleteLink.mutate(linkId); // Toast handled in hook
-  };
-
-  return <button onClick={handleDelete}>Delete</button>;
 }
 ```
 
-## 🔒 Type Safety
-
-Always use generic types:
-
-```typescript
-// Define types
-type Link = {
-  id: number;
-  url: string;
-  code: string;
-  deleted_at?: Date | null; // Soft delete column
-};
-
-type LinkFormData = Omit<Link, "id" | "deleted_at">;
-
-// Use with hooks
-const { data } = useGetData<Link>(["links", params]);
-const addLink = useAddData<LinkFormData>("links");
-```
-
-## 📋 Checklist
-
-Before creating a new action/query file, ask:
-
-- [ ] Is this a standard CRUD operation? → Use generic functions
-- [ ] Does this use standard filtering/pagination? → Use generic functions
-- [ ] Does this only need success/error toasts? → Use generic functions
-- [ ] Is there complex business logic? → Create specific file
-- [ ] Are there multiple related operations? → Create specific file
-- [ ] Does it need custom validation? → Create specific file
-
 ## 🚫 Common Mistakes
-
-❌ **DON'T create redundant files:**
-
-```typescript
-// actions/links.ts - UNNECESSARY
-export const getLinks = async () => getData<Link>("links");
-export const addLink = async (form) => addData("links", form);
-```
 
 ❌ **DON'T handle toasts in components:**
 
 ```typescript
-// Component - WRONG
-const addLink = useAddData("links");
+const addLink = useAddLink();
 addLink.mutate(form, {
-  onSuccess: () => toast.success("Success!"), // ❌ NO!
+  onSuccess: () => toast.success("Success!"),
 });
 ```
 
-❌ **DON'T ignore soft delete detection:**
+❌ **DON'T forget userId authorization:**
 
 ```typescript
-// actions.ts - WRONG
-export const deleteData = async (name: string, id: number) => {
-  // ❌ Always uses hard delete, doesn't check schema
-  return authApi.delete(`/api/${name}/${id}`);
+export const getLinks = async (): Promise<Link[]> => {
+  return await db.select().from(links);
 };
 ```
 
-✅ **DO use generic functions:**
+❌ **DON'T use generic action/query files:**
 
-```typescript
-// Component - CORRECT
-import { useGetData, useAddData } from "@/queries/queries";
+This project uses table-specific files, not generic ones.
 
-const { data } = useGetData<Link>(["links", params]);
-const addLink = useAddData<LinkFormData>("links");
-```
+## ✅ Best Practices
 
-✅ **DO handle toasts in hooks:**
-
-```typescript
-// queries.ts - CORRECT
-onSuccess: ({ message }) => {
-  toast.success(message); // ✅ YES!
-  invalidateQueries(queryClient, name);
-};
-```
-
----
-
-**Version**: 1.0.0  
-**Last Updated**: January 6, 2026
+- ✅ One file per table in both actions and queries
+- ✅ Always pass userId to server actions
+- ✅ Always verify userId in WHERE clauses
+- ✅ Toast notifications in mutation hooks
+- ✅ Use TypeScript types from schema
+- ✅ Invalidate queries after mutations
+- ✅ Use query keys from `keys.ts`
+- ✅ Support pagination and search
+- ✅ Hard delete (no soft delete in this project)

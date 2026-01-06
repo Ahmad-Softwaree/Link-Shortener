@@ -14,17 +14,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useDeleteData } from "@/lib/react-query/queries/query";
-import { links } from "@/lib/db/schema";
-import { QUERY_KEYS } from "@/lib/react-query/keys";
+import { useDeleteLink } from "@/lib/react-query/queries/links.query";
 import FilterModal from "@/components/shared/FilterModal";
 
 export function ModalManager() {
   const { modal, closeModal, modalData } = useModalStore();
   const { t } = useTranslation();
-  const deleteMutation = useDeleteData({
-    table: links,
-    queryKey: [QUERY_KEYS.LINKS.ALL],
+  const deleteMutation = useDeleteLink({
     successMessage: t("toast.link_deleted"),
   });
 

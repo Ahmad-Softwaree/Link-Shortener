@@ -8,9 +8,7 @@ import { ExternalLink, Copy, Trash2, Calendar, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useModalStore } from "@/lib/store/modal.store";
-import { useDeleteData } from "@/lib/react-query/queries/query";
-import { links } from "@/lib/db/schema";
-import { QUERY_KEYS } from "@/lib/react-query/keys";
+import { useDeleteLink } from "@/lib/react-query/queries/links.query";
 import ActionTooltip from "@/components/shared/ActionTooltip";
 import { formatDate } from "@/lib/functions";
 
@@ -21,9 +19,7 @@ interface LinkCardProps {
 export function LinkCard({ link }: LinkCardProps) {
   const { t } = useTranslation();
   const { openModal } = useModalStore();
-  const deleteMutation = useDeleteData({
-    table: links,
-    queryKey: [QUERY_KEYS.LINKS.ALL],
+  const deleteMutation = useDeleteLink({
     successMessage: t("toast.link_deleted"),
   });
 
@@ -59,10 +55,12 @@ export function LinkCard({ link }: LinkCardProps) {
     <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-border/50 hover:border-primary/50 bg-card/50 backdrop-blur-sm h-full">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
-          <CardTitle className="text-lg font-semibold break-all text-foreground group-hover:text-primary transition-colors">
+          <CardTitle className="english_font text-lg font-semibold break-all text-foreground group-hover:text-primary transition-colors">
             /{link.shortCode}
           </CardTitle>
-          <Badge variant="secondary" className="shrink-0 shadow-sm">
+          <Badge
+            variant="secondary"
+            className="shrink-0 shadow-sm english_font flex items-center gap-1 px-2 py-1">
             <Calendar className="mr-1 h-3 w-3" />
             {formatDate(link.createdAt)}
           </Badge>
@@ -70,10 +68,10 @@ export function LinkCard({ link }: LinkCardProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <p className="text-xs text-muted-foreground mb-1 font-medium">
+          <p className="text-xs text-muted-foreground mb-1 font-medium ">
             {t("link.original_url")}
           </p>
-          <p className="text-sm break-all line-clamp-2 text-foreground/90">
+          <p className="text-sm break-all line-clamp-2 text-foreground/90 english_font">
             {link.originalUrl}
           </p>
         </div>

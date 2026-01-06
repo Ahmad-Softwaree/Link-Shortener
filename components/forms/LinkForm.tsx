@@ -16,9 +16,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { getLinkValidation } from "@/validation/links";
-import { useAddData, useUpdateData } from "@/lib/react-query/queries/query";
-import { links } from "@/lib/db/schema";
-import { QUERY_KEYS } from "@/lib/react-query/keys";
+import {
+  useAddLink,
+  useUpdateLink,
+} from "@/lib/react-query/queries/links.query";
 import { useModalStore } from "@/lib/store/modal.store";
 import type { GlobalFormProps } from "@/types/global";
 
@@ -39,21 +40,13 @@ export const LinkForm = ({
     defaultValues: { ...modalData },
   });
 
-  const { mutateAsync: addMutate, isPending: isAdding } = useAddData({
-    table: links,
-    queryKey: [QUERY_KEYS.LINKS.ALL],
-    uniqueField: "shortCode",
+  const { mutateAsync: addMutate, isPending: isAdding } = useAddLink({
     successMessage: t("toast.link_created"),
   });
-  const { mutateAsync: updateMutate, isPending: isUpdating } = useUpdateData(
-    modalData?.id,
-    {
-      table: links,
-      queryKey: [QUERY_KEYS.LINKS.ALL],
-      uniqueField: "shortCode",
-      successMessage: t("toast.link_updated"),
-    }
-  );
+
+  const { mutateAsync: updateMutate, isPending: isUpdating } = useUpdateLink({
+    successMessage: t("toast.link_updated"),
+  });
 
   const isPending = isAdding || isUpdating;
 
@@ -67,7 +60,7 @@ export const LinkForm = ({
         else closeModal();
       });
     } else {
-      await updateMutate(data).then(() => {
+      await updateMutate({ id: modalData?.id, form: data }).then(() => {
         form.reset();
         if (onFinalClose) onFinalClose();
         else closeModal();
@@ -111,7 +104,7 @@ export const LinkForm = ({
                   placeholder={t("form.short_code_placeholder")}
                   {...field}
                   disabled={isPending}
-                  className="text-base font-mono"
+                  className="text-base"
                 />
               </FormControl>
               <FormDescription className="text-xs">

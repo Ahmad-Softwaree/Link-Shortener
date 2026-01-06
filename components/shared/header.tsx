@@ -8,18 +8,20 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { Link2 } from "lucide-react";
+import { Link2, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useTranslation } from "react-i18next";
 import { ModeToggle } from "@/components/mode-toggle";
 import { LangToggle } from "@/components/lang-toggle";
+import { useState } from "react";
 
 export function Header() {
   const { t } = useTranslation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-lg border-b border-border/40 shadow-sm">
-      <div className="container mx-auto px-4">
+      <div className="px-4">
         <div className="flex justify-between items-center py-4">
           <Link href="/" className="flex items-center gap-2 group">
             <div className="p-2 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg shadow-md group-hover:shadow-lg group-hover:shadow-violet-500/50 transition-all duration-300">
@@ -30,7 +32,7 @@ export function Header() {
             </span>
           </Link>
 
-          <div className="flex gap-3 items-center">
+          <div className="hidden md:flex gap-3 items-center">
             <LangToggle />
             <ModeToggle />
 
@@ -59,7 +61,59 @@ export function Header() {
               <UserButton />
             </SignedIn>
           </div>
+
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 hover:bg-violet-50 dark:hover:bg-violet-950/30 rounded-lg transition-colors">
+            {mobileMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+          </button>
         </div>
+
+        {mobileMenuOpen && (
+          <div className="md:hidden pb-4 pt-2 space-y-3 border-t border-border/40 mt-2">
+            <div className="flex gap-2 justify-center">
+              <LangToggle />
+              <ModeToggle />
+            </div>
+
+            <SignedOut>
+              <div className="flex flex-col gap-2">
+                <SignInButton mode="modal">
+                  <Button
+                    variant="ghost"
+                    className="w-full hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}>
+                    {t("header.sign_in")}
+                  </Button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <Button
+                    className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-md hover:shadow-lg transition-all"
+                    onClick={() => setMobileMenuOpen(false)}>
+                    {t("header.sign_up")}
+                  </Button>
+                </SignUpButton>
+              </div>
+            </SignedOut>
+
+            <SignedIn>
+              <div className="flex flex-col gap-2 items-center">
+                <Button
+                  variant="ghost"
+                  asChild
+                  className="w-full hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}>
+                  <Link href="/dashboard">{t("header.dashboard")}</Link>
+                </Button>
+                <UserButton />
+              </div>
+            </SignedIn>
+          </div>
+        )}
       </div>
     </header>
   );

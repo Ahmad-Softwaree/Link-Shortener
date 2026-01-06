@@ -1,634 +1,505 @@
 # URL Parameter Handling - nuqs
 
-**🚨 CRITICAL:** ALWAYS use `nuqs` for managing URL parameters (search, filters, pagination, sorting, etc.).  
+**Last Updated**: January 6, 2026  
+**Version**: 1.0.0
+
+**🚨 CRITICAL:** ALWAYS use `nuqs` via the `useAppQueryParams` hook for managing URL parameters.  
 **NEVER use raw `searchParams`, `useSearchParams`, or manual URL manipulation.**
 
 ## 📋 Overview
 
-This project uses **[nuqs](https://nuqs.47ng.com/)** for type-safe, declarative URL state management. All URL parameters that affect data fetching (search, filters, pagination, sorting, etc.) MUST be managed through nuqs hooks.
+This project uses **[nuqs](https://nuqs.47ng.com/)** for type-safe URL state management, accessed through a **custom hook** (`useAppQueryParams`) that centralizes pagination, search, and filter parameters.
 
 ## 🎯 Core Principles
 
-1. **nuqs for ALL URL state** - Search, filters, pagination, sorting, tabs, modals
-2. **Type-safe parameters** - Define schemas with Zod for validation
-3. **Automatic URL sync** - State changes automatically update the URL
-4. **Server & Client compatibility** - Works in both Server and Client Components
-5. **Integration with React Query** - URL params drive query keys for data fetching
+1. **useAppQueryParams hook for ALL URL state** - Page, limit, search (centralized)
+2. **nuqs under the hood** - Type-safe URL parameter management
+3. **Type-safe parameters** - Automatic parsing with `parseAsInteger` and `parseAsString`
+4. **Automatic URL sync** - State changes automatically update the URL
+5. **Cookie integration** - Limit preference persisted in cookies
+6. **Server & Client compatibility** - Works in both environments
+7. **Integration with React Query** - URL params drive query keys for data fetching
 
 ## 📦 Installation
 
 ```bash
-# Install nuqs
+# nuqs is already installed in this project
 bun add nuqs
-
-# nuqs is already compatible with Next.js 16+ and React 19+
 ```
 
-## 🔧 Basic Setup
+## 🔧 Architecture
 
-### Step 1: Create URL Parameter Parsers (`/lib/url-parsers.ts`)
-
-Define reusable parsers for common URL parameter types:
-
-```typescript
-import { parseAsString, parseAsInteger, createParser } from "nuqs";
-
-/**
- * Common URL parameter parsers
- * Define these once and reuse across the app
- */
-
-// String parameters
-export const searchParser = parseAsString.withDefault("");
-export const sortParser = parseAsString.withDefault("createdAt");
-export const orderParser = parseAsString.withDefault("desc");
-
-// Number parameters
-export const pageParser = parseAsInteger.withDefault(1);
-export const limitParser = parseAsInteger.withDefault(10);
-
-// Custom parsers with validation
-export const statusParser = createParser({
-  parse: (value) => {
-    const valid = ["active", "inactive", "all"] as const;
-    return valid.includes(value as any)
-      ? (value as (typeof valid)[number])
-      : "all";
-  },
-  serialize: (value) => value,
-}).withDefault("all");
+```
+Page Component
+  ↓
+useAppQueryParams (custom hook)
+  ↓
+nuqs (useQueryStates)
+  ↓
+URL Parameters (page, limit, search)
+  ↓
+React Query (useGetLinks)
+  ↓
+Server Action (getLinks)
 ```
 
-### Step 2: Add NuqsAdapter to Layout (`/app/layout.tsx`)
+## 🎯 The useAppQueryParams Hook
 
-Wrap your app with the `NuqsAdapter` provider:
+**🚨 ALWAYS use this hook for URL parameters. DO NOT use nuqs directly.**
 
-```typescript
-import { NuqsAdapter } from "nuqs/adapters/next/app";
+### Location
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en">
-      <body>
-        <NuqsAdapter>
-          <QueryProvider>{children}</QueryProvider>
-        </NuqsAdapter>
-      </body>
-    </html>
-  );
-}
+```
+hooks/useAppQuery.tsx
 ```
 
-## 📝 Usage Patterns
-
-### ⭐ Pattern 0: Custom Hook for Centralized URL Params (RECOMMENDED)
-
-**🚨 BEST PRACTICE:** Create a custom hook per feature to centralize all URL parameter management.
-
-**Create Hook** (`/hooks/use-links-filters.ts`):
+### Implementation
 
 ```typescript
 "use client";
 
-import { useQueryStates } from "nuqs";
+import { ENUMs } from "@/lib/enums";
+import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 import {
-  searchParser,
-  statusParser,
-  sortParser,
-  orderParser,
-} from "@/lib/url-parsers";
+  getLimitFromCookie,
+  setLimitCookie,
+} from "@/lib/config/pagination.config";
+import { useEffect, useState } from "react";
 
-/**
- * Custom hook to manage all URL parameters for the links feature
- * This centralizes URL state management and makes it reusable
- *
- * URL Example: ?search=test&status=active&sort=createdAt&order=desc
- */
-export function useLinksFilters() {
-  const [filters, setFilters] = useQueryStates(
-    {
-      search: searchParser,
-      status: statusParser,
-      sort: sortParser,
-      order: orderParser,
-    },
-    {
-      history: "replace", // Replace history instead of push for cleaner navigation
-    }
-  );
+export function useAppQueryParams() {
+  const [cookieLimit, setCookieLimit] = useState<number>(100);
 
-  // Helper methods for common operations
-  const resetFilters = () => {
-    setFilters({
-      search: null,
-      status: null,
-      sort: null,
-      order: null,
-    });
+  useEffect(() => {
+    setCookieLimit(getLimitFromCookie());
+  }, []);
+
+  const [queries, setQueries] = useQueryStates({
+    [ENUMs.PARAMS.PAGE]: parseAsInteger.withDefault(0),
+    [ENUMs.PARAMS.LIMIT]: parseAsInteger.withDefault(cookieLimit),
+    [ENUMs.PARAMS.SEARCH]: parseAsString.withDefault(""),
+  });
+
+  const removeAllQueries = () => {
+    setQueries(null);
   };
 
-  const updateSearch = (search: string) => {
-    setFilters({ search });
-  };
-
-  const updateStatus = (status: string) => {
-    setFilters({ status });
-  };
-
-  const updateSort = (sort: string, order?: string) => {
-    setFilters({ sort, ...(order && { order }) });
+  const setLimit = (limit: number) => {
+    setLimitCookie(limit);
+    setQueries({ limit, page: 0 });
   };
 
   return {
-    filters,
-    setFilters,
-    updateSearch,
-    updateStatus,
-    updateSort,
-    resetFilters,
+    queries,
+    setQueries,
+    removeAllQueries,
+    setLimit,
   };
 }
 ```
 
-**Usage in Component** (`/components/dashboard/dashboard-content.tsx`):
+### Return Values
+
+- **`queries`** - Object with `page`, `limit`, `search`
+- **`setQueries(updates)`** - Update one or more parameters
+- **`removeAllQueries()`** - Clear all URL parameters
+- **`setLimit(limit)`** - Update limit (saves to cookie, resets to page 0)
+
+### Default Values
+
+- **page**: `0` (0-based indexing)
+- **limit**: `100` (or from cookie if set)
+- **search**: `""` (empty string)
+
+## 📝 Usage Patterns
+
+### Pattern 1: Basic Usage in Page Component
 
 ```typescript
+// app/dashboard/page.tsx
 "use client";
 
-import { useLinksFilters } from "@/hooks/use-links-filters";
-import { useGetUserLinksInfinite } from "@/queries/links";
-import { SearchBar } from "@/components/shared/search-bar";
+import { useAppQueryParams } from "@/hooks/useAppQuery";
+import { useGetLinks } from "@/lib/react-query/queries/links.query";
+import { DataBox } from "@/components/table/data-box";
 
-export function DashboardContent() {
-  // Single hook for all URL params
-  const { filters, updateSearch, resetFilters } = useLinksFilters();
+export default function DashboardPage() {
+  const { queries, setQueries, setLimit } = useAppQueryParams();
 
-  // Pass filters to React Query
-  const { data, isLoading } = useGetUserLinksInfinite(10, filters.search);
-
-  return (
-    <div>
-      <SearchBar
-        value={filters.search}
-        onChange={updateSearch}
-        placeholder="Search links..."
-      />
-
-      <select
-        value={filters.status}
-        onChange={(e) => updateStatus(e.target.value)}>
-        <option value="all">All</option>
-        <option value="active">Active</option>
-        <option value="inactive">Inactive</option>
-      </select>
-
-      <button onClick={resetFilters}>Reset All Filters</button>
-
-      {/* Render data */}
-    </div>
-  );
-}
-```
-
-**Benefits:**
-
-- ✅ Single source of truth for URL params
-- ✅ Reusable across multiple components
-- ✅ Type-safe with autocomplete
-- ✅ Helper methods for common operations
-- ✅ Easier to test and maintain
-
----
-
-### Pattern 1: Simple Search Parameter
-
-**Client Component** (`/components/dashboard/dashboard-content.tsx`):
-
-```typescript
-"use client";
-
-import { useQueryState } from "nuqs";
-import { searchParser } from "@/lib/url-parsers";
-import { useGetUserLinksInfinite } from "@/queries/links";
-import { SearchBar } from "@/components/shared/search-bar";
-
-export function DashboardContent() {
-  // URL parameter: ?search=query
-  const [search, setSearch] = useQueryState("search", searchParser);
-
-  // Pass URL param to React Query
-  const { data, isLoading } = useGetUserLinksInfinite(10, search);
-
-  return (
-    <div>
-      <SearchBar
-        value={search}
-        onChange={setSearch}
-        placeholder="Search links..."
-      />
-      {/* Render data */}
-    </div>
-  );
-}
-```
-
-### Pattern 2: Multiple Filter Parameters
-
-```typescript
-"use client";
-
-import { useQueryStates } from "nuqs";
-import { searchParser, statusParser, sortParser } from "@/lib/url-parsers";
-
-export function FilteredList() {
-  // URL: ?search=test&status=active&sort=createdAt
-  const [filters, setFilters] = useQueryStates({
-    search: searchParser,
-    status: statusParser,
-    sort: sortParser,
+  const queryResult = useGetLinks({
+    queries,
   });
 
-  // Update multiple params at once (single URL update)
-  const handleFilterChange = (newFilters: Partial<typeof filters>) => {
-    setFilters(newFilters);
+  const handlePageChange = (page: number) => {
+    setQueries({ page });
   };
 
-  // Reset all filters
-  const handleReset = () => {
-    setFilters({
-      search: null, // null removes the param from URL
-      status: null,
-      sort: null,
+  const handleLimitChange = (limit: number) => {
+    setLimit(limit);
+  };
+
+  return (
+    <DataBox
+      queryFn={() => queryResult}
+      Component={LinkCard}
+      onPageChange={handlePageChange}
+      onLimitChange={handleLimitChange}
+      currentPage={queries.page}
+      limit={queries.limit}
+    />
+  );
+}
+```
+
+**Key Points:**
+
+- ✅ Get `queries` object with page, limit, search
+- ✅ Pass `queries` to React Query hook
+- ✅ Update page with `setQueries({ page })`
+- ✅ Update limit with `setLimit(limit)` (resets to page 0)
+
+### Pattern 2: Search Integration
+
+```typescript
+// In a search component
+import { useAppQueryParams } from "@/hooks/useAppQuery";
+
+export function SearchBar() {
+  const { queries, setQueries } = useAppQueryParams();
+
+  const handleSearch = (value: string) => {
+    setQueries({
+      search: value,
+      page: 0,
     });
   };
 
   return (
-    <div>
-      <input
-        value={filters.search}
-        onChange={(e) => setFilters({ search: e.target.value })}
-      />
-      <select
-        value={filters.status}
-        onChange={(e) => setFilters({ status: e.target.value })}>
-        <option value="all">All</option>
-        <option value="active">Active</option>
-        <option value="inactive">Inactive</option>
-      </select>
-      <button onClick={handleReset}>Reset Filters</button>
-    </div>
-  );
-}
-```
-
-### Pattern 3: Integration with React Query
-
-**Query Hook** (`/queries/links.ts`):
-
-```typescript
-import { useGetUserLinksInfinite } from "@/queries/links";
-import { useQueryState } from "nuqs";
-import { searchParser } from "@/lib/url-parsers";
-
-export function LinkList() {
-  const [search] = useQueryState("search", searchParser);
-
-  // React Query automatically re-fetches when search changes
-  const { data, isLoading } = useGetUserLinksInfinite(10, search);
-
-  return (
-    <div>
-      {isLoading
-        ? "Loading..."
-        : data?.items.map((link) => <LinkCard key={link.id} link={link} />)}
-    </div>
-  );
-}
-```
-
-**Query Key Integration** (`/lib/query-keys.ts`):
-
-```typescript
-export const queryKeys = {
-  links: {
-    all: ["links"] as const,
-    lists: () => [...queryKeys.links.all, "list"] as const,
-    // Include URL params in query key for proper caching
-    list: (filters: { limit?: number; search?: string }) =>
-      [...queryKeys.links.lists(), filters] as const,
-  },
-} as const;
-```
-
-### Pattern 4: Server Component URL Access
-
-**Server Component** (`/app/dashboard/page.tsx`):
-
-```typescript
-import { searchParamsCache } from "@/lib/url-parsers";
-
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  // Parse URL params in Server Component
-  const { search, status } = await searchParamsCache.parse(await searchParams);
-
-  // Fetch data with params
-  const data = await getUserLinks({ search, status });
-
-  return <DashboardContent initialData={data} />;
-}
-```
-
-**Create Search Params Cache** (`/lib/url-parsers.ts`):
-
-```typescript
-import { createSearchParamsCache } from "nuqs/server";
-import { searchParser, statusParser } from "@/lib/url-parsers";
-
-export const searchParamsCache = createSearchParamsCache({
-  search: searchParser,
-  status: statusParser,
-});
-```
-
-### Pattern 5: Pagination with Infinite Scroll
-
-```typescript
-"use client";
-
-import { useQueryState } from "nuqs";
-import { pageParser, limitParser } from "@/lib/url-parsers";
-
-export function PaginatedList() {
-  const [page, setPage] = useQueryState("page", pageParser);
-  const [limit, setLimit] = useQueryState("limit", limitParser);
-
-  const { data, fetchNextPage, hasNextPage } = useGetUserLinksInfinite(
-    limit,
-    undefined
-  );
-
-  const handleLoadMore = () => {
-    setPage(page + 1);
-    fetchNextPage();
-  };
-
-  return (
-    <div>
-      {/* Render items */}
-      {hasNextPage && <button onClick={handleLoadMore}>Load More</button>}
-    </div>
-  );
-}
-```
-
-### Pattern 6: Modal State in URL
-
-```typescript
-"use client";
-
-import { useQueryState } from "nuqs";
-import { parseAsString } from "nuqs";
-
-export function LinkActions() {
-  const [modal, setModal] = useQueryState("modal", parseAsString);
-
-  return (
-    <div>
-      <button onClick={() => setModal("create")}>Create Link</button>
-      <button onClick={() => setModal("edit")}>Edit Link</button>
-
-      {modal === "create" && (
-        <CreateLinkDialog onClose={() => setModal(null)} />
-      )}
-      {modal === "edit" && <EditLinkDialog onClose={() => setModal(null)} />}
-    </div>
-  );
-}
-```
-
-## 🚀 Advanced Patterns
-
-### Debounced Search
-
-```typescript
-import { useQueryState } from "nuqs";
-import { searchParser } from "@/lib/url-parsers";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
-
-export function SearchWithDebounce() {
-  const [search, setSearch] = useQueryState("search", searchParser);
-  const debouncedSearch = useDebouncedValue(search, 300);
-
-  // Use debounced value for data fetching
-  const { data } = useGetUserLinks(debouncedSearch);
-
-  return (
     <input
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
+      value={queries.search}
+      onChange={(e) => handleSearch(e.target.value)}
       placeholder="Search..."
     />
   );
 }
 ```
 
-### History Options
+**Key Points:**
+
+- ✅ Reset to page 0 when search changes
+- ✅ Controlled input with `queries.search`
+
+### Pattern 3: Integration with React Query
 
 ```typescript
-import { useQueryState } from "nuqs";
-import { searchParser } from "@/lib/url-parsers";
+// lib/react-query/queries/links.query.ts
+export function useGetLinks({
+  queries,
+  enabled = true,
+}: UseGetLinksOptions = {}) {
+  const { userId } = useAuth();
 
-export function HistoryControl() {
-  const [search, setSearch] = useQueryState("search", searchParser);
-
-  // Replace history instead of push (cleaner browser history)
-  const handleSearch = (value: string) => {
-    setSearch(value, { history: "replace" });
-  };
-
-  // Scroll to top on change
-  const handleSearchWithScroll = (value: string) => {
-    setSearch(value, { scroll: true });
-  };
-
-  return <SearchBar value={search} onChange={handleSearch} />;
+  return useQuery({
+    queryKey: links.list(queries),
+    queryFn: (): Promise<PaginationResult<Link>> => getLinks(userId!, queries),
+    retry: 0,
+    enabled: !!userId && enabled,
+  });
 }
 ```
 
-### Shallow Routing (No Server Re-render)
+**Key Points:**
+
+- ✅ `queries` object becomes part of query key
+- ✅ Query refetches automatically when URL params change
+- ✅ Type-safe with `QueryParam` type
+
+### Pattern 4: Server Action Integration
 
 ```typescript
-import { useQueryState } from "nuqs";
-import { searchParser } from "@/lib/url-parsers";
+// lib/react-query/actions/links.action.ts
+export const getLinks = async (
+  userId: string,
+  queries?: QueryParam
+): Promise<PaginationResult<Link>> => {
+  const page = Number(queries?.page) || 0;
+  const limit = Number(queries?.limit) || 100;
+  const search = (queries?.search as string) || "";
 
-export function ShallowSearch() {
-  const [search, setSearch] = useQueryState(
-    "search",
-    searchParser.withOptions({
-      shallow: true, // Don't trigger server re-render
-    })
-  );
+  const offset = page * limit;
 
-  return <input value={search} onChange={(e) => setSearch(e.target.value)} />;
+  const whereConditions: any[] = [eq(links.userId, userId)];
+
+  if (search) {
+    whereConditions.push(
+      or(
+        ilike(links.shortCode, `%${search}%`),
+        ilike(links.originalUrl, `%${search}%`)
+      )!
+    );
+  }
+
+  const [data, totalResult] = await Promise.all([
+    db
+      .select()
+      .from(links)
+      .where(/* ... */)
+      .orderBy(desc(links.createdAt))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(links)
+      .where(/* ... */),
+  ]);
+
+  const total = totalResult[0]?.count || 0;
+
+  return { data, total, hasMore: offset + data.length < total };
+};
+```
+
+**Key Points:**
+
+- ✅ Extract page, limit, search from `queries` object
+- ✅ Calculate offset from page and limit
+- ✅ Use search in WHERE conditions
+
+## 🔑 Query Parameter Definitions
+
+### ENUMs Configuration
+
+```typescript
+// lib/enums.ts
+export const ENUMs = {
+  PARAMS: {
+    PAGE: "page",
+    LIMIT: "limit",
+    SEARCH: "search",
+  },
+};
+```
+
+### QueryParam Type
+
+```typescript
+// types/global.ts
+export type QueryParam = {
+  page?: number;
+  limit?: number;
+  search?: string;
+};
+```
+
+## 🍪 Cookie Integration
+
+The `limit` parameter is persisted in a cookie for user preference.
+
+### Configuration
+
+```typescript
+// lib/config/pagination.config.ts
+import { getCookie, setCookie } from "./cookie.config";
+
+const LIMIT_COOKIE_NAME = "pagination_limit";
+const VALID_LIMITS = [50, 100, 150, 200] as const;
+const DEFAULT_LIMIT = 100;
+
+export const getLimitFromCookie = (): number => {
+  const cookieValue = getCookie(LIMIT_COOKIE_NAME);
+  if (!cookieValue) return DEFAULT_LIMIT;
+
+  const parsedLimit = parseInt(cookieValue, 10);
+
+  if (VALID_LIMITS.includes(parsedLimit as any)) {
+    return parsedLimit;
+  }
+
+  return DEFAULT_LIMIT;
+};
+
+export const setLimitCookie = (limit: number): void => {
+  if (VALID_LIMITS.includes(limit as any)) {
+    setCookie(LIMIT_COOKIE_NAME, limit.toString(), 30);
+  }
+};
+```
+
+**How it works:**
+
+1. ✅ On mount, `useAppQueryParams` reads limit from cookie
+2. ✅ Sets URL param to cookie value if not in URL
+3. ✅ When user changes limit, both cookie and URL update
+4. ✅ Limit resets to page 0 automatically
+
+## 📊 URL State Flow
+
+### Example URL States
+
+```
+Initial load:
+?page=0&limit=100&search=
+
+After search:
+?page=0&limit=100&search=test
+
+After page change:
+?page=2&limit=100&search=test
+
+After limit change:
+?page=0&limit=50&search=test
+```
+
+### State Transitions
+
+```
+1. User types in search
+   ↓
+   setQueries({ search: "test", page: 0 })
+   ↓
+   URL updates: ?page=0&limit=100&search=test
+   ↓
+   React Query detects query key change
+   ↓
+   Refetches data with new params
+
+2. User changes page
+   ↓
+   setQueries({ page: 2 })
+   ↓
+   URL updates: ?page=2&limit=100&search=test
+   ↓
+   React Query refetches
+
+3. User changes limit
+   ↓
+   setLimit(50)
+   ↓
+   Cookie updated + setQueries({ limit: 50, page: 0 })
+   ↓
+   URL updates: ?page=0&limit=50&search=test
+   ↓
+   React Query refetches
+```
+
+## 🚫 Common Mistakes
+
+❌ **DON'T use nuqs directly:**
+
+```typescript
+const [search, setSearch] = useQueryState("search");
+```
+
+❌ **DON'T use useState for URL params:**
+
+```typescript
+const [page, setPage] = useState(0);
+```
+
+❌ **DON'T use Next.js searchParams directly:**
+
+```typescript
+export default function Page({ searchParams }: { searchParams: any }) {
+  const page = searchParams.page;
 }
 ```
 
-## 📂 File Organization
+❌ **DON'T forget to reset page when changing filters:**
 
+```typescript
+setQueries({ search: "test" });
 ```
-/lib
-  ├── url-parsers.ts        # All nuqs parsers and searchParamsCache
-  └── query-keys.ts         # React Query keys (include URL params)
 
-/hooks
-  ├── use-links-filters.ts  # Custom hook for links URL params
-  ├── use-users-filters.ts  # Custom hook for users URL params
-  └── use-[feature]-filters.ts  # One hook per feature
+❌ **DON'T update limit without using setLimit:**
 
-/components
-  └── [feature]/
-      └── component.tsx     # Use custom hooks (e.g., useLinksFilters)
+```typescript
+setQueries({ limit: 50 });
 ```
 
 ## ✅ Best Practices
 
-1. **Create custom hooks per feature** - Use hooks like `useLinksFilters()` to centralize URL param management (RECOMMENDED)
-2. **Define parsers once** - Create reusable parsers in `/lib/url-parsers.ts`
-3. **Type safety** - Always use parsers with `.withDefault()` for safety
-4. **React Query integration** - Include URL params in query keys
-5. **Replace history for filters** - Use `{ history: "replace" }` for better UX
-6. **Shallow routing for frequent updates** - Use `shallow: true` to avoid re-renders
-7. **Debounce search inputs** - Prevent excessive URL updates
-8. **Use `null` to remove params** - Set param to `null` to remove from URL
-9. **Batch updates** - Use `useQueryStates` for multiple params
-10. **Server Components** - Use `searchParamsCache.parse()` for SSR
-11. **Consistent naming** - Use consistent param names across the app
-12. **Helper methods in hooks** - Add `updateSearch()`, `resetFilters()`, etc. for better DX
+- ✅ **Always use `useAppQueryParams`** for URL state
+- ✅ **Reset to page 0** when changing search or limit
+- ✅ **Use `setLimit()`** for limit changes (handles cookie)
+- ✅ **Pass queries object** to React Query hooks
+- ✅ **Type-safe** with QueryParam type
+- ✅ **0-based page indexing** (page 0 = first page)
+- ✅ **Centralized parameter management** in one hook
+- ✅ **Cookie persistence** for limit preference
 
-## ⚠️ Common Mistakes
+## 🔄 Adding New Parameters
 
-### ❌ DON'T: Use raw searchParams
+If you need to add new URL parameters in the future:
+
+### 1. Update ENUMs
 
 ```typescript
-// ❌ WRONG - Manual URL manipulation
-const searchParams = useSearchParams();
-const search = searchParams.get("search") || "";
-
-const updateSearch = (value: string) => {
-  const params = new URLSearchParams(searchParams);
-  params.set("search", value);
-  router.push(`?${params.toString()}`);
+// lib/enums.ts
+export const ENUMs = {
+  PARAMS: {
+    PAGE: "page",
+    LIMIT: "limit",
+    SEARCH: "search",
+    STATUS: "status",
+  },
 };
 ```
 
-### ✅ DO: Use custom hooks with nuqs
+### 2. Update useAppQueryParams
 
 ```typescript
-// ✅ CORRECT - Use custom hook
-const { filters, updateSearch } = useLinksFilters();
-```
-
----
-
-### ❌ DON'T: Manage URL params directly in components
-
-```typescript
-// ❌ WRONG - Repetitive code in every component
-export function Component1() {
-  const [search, setSearch] = useQueryState("search", searchParser);
-  const [status, setStatus] = useQueryState("status", statusParser);
-  // ... repeated in multiple components
-}
-```
-
-### ✅ DO: Use centralized custom hook
-
-```typescript
-// ✅ CORRECT - Reusable hook
-export function Component1() {
-  const { filters, updateSearch } = useLinksFilters();
-}
-
-export function Component2() {
-  const { filters, resetFilters } = useLinksFilters();
-}
-```
-
----
-
-### ❌ DON'T: Forget to include URL params in query keys
-
-```typescript
-// ❌ WRONG - Query won't re-fetch on search change
-const { data } = useQuery({
-  queryKey: ["links"], // Missing search param
-  queryFn: () => getLinks(search),
+// hooks/useAppQuery.tsx
+const [queries, setQueries] = useQueryStates({
+  [ENUMs.PARAMS.PAGE]: parseAsInteger.withDefault(0),
+  [ENUMs.PARAMS.LIMIT]: parseAsInteger.withDefault(cookieLimit),
+  [ENUMs.PARAMS.SEARCH]: parseAsString.withDefault(""),
+  [ENUMs.PARAMS.STATUS]: parseAsString.withDefault("all"),
 });
 ```
 
-### ✅ DO: Include params in query keys
+### 3. Update QueryParam Type
 
 ```typescript
-// ✅ CORRECT - Query re-fetches when search changes
-const { data } = useQuery({
-  queryKey: ["links", { search }],
-  queryFn: () => getLinks(search),
-});
+// types/global.ts
+export type QueryParam = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+};
 ```
 
----
-
-### ❌ DON'T: Update multiple params separately
+### 4. Update Server Action
 
 ```typescript
-// ❌ WRONG - Multiple URL updates
-setSearch("test");
-setStatus("active");
-setSort("name");
+// lib/react-query/actions/links.action.ts
+export const getLinks = async (
+  userId: string,
+  queries?: QueryParam
+): Promise<PaginationResult<Link>> => {
+  const status = queries?.status || "all";
+
+  if (status !== "all") {
+    whereConditions.push(eq(links.status, status));
+  }
+};
 ```
 
-### ✅ DO: Batch updates
+## 🎯 Summary
 
-```typescript
-// ✅ CORRECT - Single URL update
-setFilters({ search: "test", status: "active", sort: "name" });
-```
+**This project uses:**
 
-## 🔍 Testing URL Parameters
+- ✅ `useAppQueryParams` hook (custom wrapper around nuqs)
+- ✅ Centralized URL parameter management
+- ✅ Type-safe with TypeScript
+- ✅ Automatic URL synchronization
+- ✅ Cookie persistence for limit
+- ✅ Integration with React Query
+- ✅ Page reset on filter/search/limit changes
+- ✅ 0-based page indexing
 
-```typescript
-import { render } from "@testing-library/react";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
+**DO NOT use:**
 
-function renderWithNuqs(component: React.ReactElement) {
-  return render(<NuqsAdapter>{component}</NuqsAdapter>);
-}
-
-test("search parameter updates URL", () => {
-  const { getByPlaceholderText } = renderWithNuqs(<SearchComponent />);
-  const input = getByPlaceholderText("Search...");
-
-  fireEvent.change(input, { target: { value: "test" } });
-
-  expect(window.location.search).toBe("?search=test");
-});
-```
-
-## 📚 Resources
-
-- **nuqs Documentation**: https://nuqs.47ng.com/
-- **Next.js App Router Integration**: https://nuqs.47ng.com/docs/adapters/next
-- **Server Components**: https://nuqs.47ng.com/docs/server-components
-
----
-
-**Last Updated**: January 6, 2026  
-**Version**: 1.0.0
+- ❌ Direct nuqs hooks
+- ❌ useState for URL parameters
+- ❌ Next.js searchParams directly
+- ❌ Manual URL manipulation

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getLinkByShortCode } from "@/lib/react-query/actions/action";
+import { getLinkByShortCode } from "@/lib/react-query/actions/links.action";
 
 export async function GET(
   request: NextRequest,

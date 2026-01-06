@@ -1,7 +1,7 @@
-export const QUERY_KEYS = {
-  LINKS: {
-    ALL: "links_all",
-    ONE: (id: number) => `link_${id}`,
-    USER_LINKS: (userId: number) => `user_${userId}_links`,
-  },
-} as const;
+export const links = {
+  all: () => ["links"] as const,
+  lists: () => [...links.all(), "list"] as const,
+  list: (filters?: Record<string, any>) => [...links.lists(), filters] as const,
+  details: () => [...links.all(), "detail"] as const,
+  detail: (id: number) => [...links.details(), id] as const,
+};

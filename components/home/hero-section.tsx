@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
 export function HeroSection() {
+  const { t } = useTranslation();
   return (
     <section className="relative  mx-auto px-4 py-20 md:py-32 overflow-hidden">
       {/* Gradient Background Orbs */}
@@ -32,7 +34,7 @@ export function HeroSection() {
             variant="secondary"
             className="text-sm border-violet-200 dark:border-violet-800">
             <Sparkles className="mr-2 h-3 w-3 text-violet-600 dark:text-violet-400" />
-            Fast, Simple, Powerful
+            {t("home.hero.badge")}
           </Badge>
         </motion.div>
 
@@ -41,10 +43,10 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
           className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight max-w-4xl">
-          Shorten Your Links,
+          {t("home.hero.title_line1")}
           <br />
           <span className="bg-gradient-to-r from-violet-600 to-indigo-600 dark:from-violet-400 dark:to-indigo-400 bg-clip-text text-transparent">
-            Amplify Your Reach
+            {t("home.hero.title_line2")}
           </span>
         </motion.h1>
 
@@ -53,9 +55,7 @@ export function HeroSection() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
           className="text-lg md:text-xl text-muted-foreground max-w-2xl">
-          Transform long, complex URLs into short, memorable links. Track
-          performance, manage your links, and grow your online presence with our
-          powerful link shortener.
+          {t("home.hero.description")}
         </motion.p>
 
         <motion.div
@@ -67,7 +67,7 @@ export function HeroSection() {
             <Button
               size="lg"
               className="text-lg px-8 shadow-lg hover:shadow-xl transition-all duration-300">
-              Get Started Free
+              {t("home.hero.get_started")}
             </Button>
           </SignUpButton>
         </motion.div>

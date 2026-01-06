@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { DashboardContent } from "@/components/dashboard/dashboard-content";
+import Page from "@/containers/Page";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -9,5 +9,12 @@ export default async function DashboardPage() {
     redirect("/");
   }
 
-  return <DashboardContent />;
+  return (
+    <Page
+      search={true}
+      parameters={["status"]}
+      statusCards={false}
+      extraFilter={false}
+    />
+  );
 }

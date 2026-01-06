@@ -3,8 +3,101 @@
 @import "@clerk/themes/shadcn.css";
 
 @custom-variant dark (&:is(.dark *));
+@font-face {
+  font-family: "bukra";
+  src: url("/fonts/bukra/UNIQAIDAR_BUKRA 003.woff2") format("woff2");
+  font-display: swap;
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: bukra-bold;
+  src: url("/fonts/bukra/UNIQAIDAR_BUKRA 002.woff2") format("woff2");
+  font-display: swap;
+  font-weight: bold;
+  font-style: normal;
+}
+@font-face {
+  font-family: "baloo_bhaijaan_2";
+  src: url("/fonts/Baloo_Bhaijaan_2/BalooBhaijaan2-VariableFont_wght.woff2")
+    format("woff2-variations");
+  font-display: swap;
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: "tajawal";
+  src: url("/fonts/Tajawal/Tajawal-Regular.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: "nunito";
+  src: url("/fonts/Nunito/Nunito-VariableFont_wght.woff2")
+    format("woff2-variations");
+  font-display: swap;
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: "cairo";
+  src: url("/fonts/Cairo/Cairo-VariableFont_slnt,wght.woff2")
+    format("woff2-variations");
+  font-display: swap;
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: "changa";
+  src: url("/fonts/Changa/Changa-VariableFont_wght.woff2")
+    format("woff2-variations");
+  font-display: swap;
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: "comic_neue";
+  src: url("/fonts/Comic_Neue/ComicNeue-Regular.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: "fredoka";
+  src: url("/fonts/Fredoka/Fredoka-VariableFont_wdth,wght.woff2")
+    format("woff2-variations");
+  font-display: swap;
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: "speda";
+  src: url("/fonts/Speda/Speda.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: "rudaw";
+  src: url("/fonts/Rudaw/rudawbold.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 500;
+  font-style: normal;
+}
 
 @theme inline {
+  --font-bukra: bukra, "sans-serif";
+  --font-bukra-bold: bukra-bold, "sans-serif";
+  --font-baloo-bhaijaan-2: "baloo_bhaijaan_2", "sans-serif";
+  --font-tajawal: "tajawal", "sans-serif";
+  --font-nunito: "nunito", "sans-serif";
+  --font-cairo: "cairo", "sans-serif";
+  --font-changa: "changa", "sans-serif";
+  --font-comic-neue: "comic_neue", "sans-serif";
+  --font-fredoka: "fredoka", "sans-serif";
+  --font-speda: "speda", "sans-serif";
+  --font-rudaw: "rudaw", "sans-serif";
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -114,6 +207,18 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+@layer components {
+  .english_font {
+    @apply font-fredoka;
+  }
+  .arabic_font {
+    @apply font-tajawal;
+  }
+  .kurdish_font {
+    @apply font-rudaw;
+  }
 }
 
 @layer base {

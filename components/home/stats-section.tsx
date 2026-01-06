@@ -2,6 +2,7 @@
 
 import { motion, useInView, useMotionValue, useSpring } from "framer-motion";
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 function AnimatedNumber({
   value,
@@ -43,22 +44,22 @@ function AnimatedNumber({
   );
 }
 
-const stats = [
+const getStats = (t: any) => [
   {
     value: 100000,
     suffix: "+",
-    label: "Links Shortened",
+    label: t("home.stats.stat1_label"),
   },
   {
     value: 99.9,
     suffix: "%",
-    label: "Uptime Guarantee",
+    label: t("home.stats.stat2_label"),
   },
   {
     value: 100,
     suffix: "ms",
     prefix: "<",
-    label: "Average Response Time",
+    label: t("home.stats.stat3_label"),
   },
 ];
 
@@ -103,6 +104,9 @@ function StatCard({
 }
 
 export function StatsSection() {
+  const { t } = useTranslation();
+  const stats = getStats(t);
+
   return (
     <section className=" mx-auto px-4 py-20">
       <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto text-center">

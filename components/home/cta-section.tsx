@@ -6,10 +6,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 export function CTASection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { t } = useTranslation();
 
   return (
     <section className=" mx-auto px-4 py-20">
@@ -25,15 +27,14 @@ export function CTASection() {
               animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-3xl md:text-4xl font-bold">
-              Ready to Get Started?
+              {t("home.cta.title")}
             </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               transition={{ duration: 0.5, delay: 0.3 }}
               className="text-lg text-muted-foreground max-w-2xl">
-              Join thousands of users who trust our platform to manage their
-              links. Start shortening your URLs for free today.
+              {t("home.cta.description")}
             </motion.p>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -45,7 +46,7 @@ export function CTASection() {
                 <Button
                   size="lg"
                   className="text-lg px-8 shadow-lg hover:shadow-xl transition-all duration-300">
-                  Create Your Account
+                  {t("home.cta.button")}
                 </Button>
               </SignUpButton>
             </motion.div>

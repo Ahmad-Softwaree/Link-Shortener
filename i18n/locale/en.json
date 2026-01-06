@@ -1,0 +1,145 @@
+{
+  "app": {
+    "title": "Link Shortener",
+    "description": "Shorten your links with ease"
+  },
+  "langs": {
+    "en": "English",
+    "ar": "العربية",
+    "ckb": "کوردی"
+  },
+  "langs_codes": {
+    "en": "EN",
+    "ar": "AR",
+    "ckb": "CKB"
+  },
+  "header": {
+    "sign_in": "Sign In",
+    "sign_up": "Sign Up",
+    "dashboard": "Dashboard"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "description": "Manage your shortened links",
+    "search_placeholder": "Search by URL or short code...",
+    "no_links": "No links yet",
+    "no_links_description": "Create your first shortened link to get started. Click the button above to begin.",
+    "no_results": "No links found",
+    "no_results_description": "No links match your search. Try a different search term.",
+    "no_data": "No Data",
+    "no_data_found": "No data found to display"
+  },
+  "link": {
+    "create": "Create Link",
+    "edit": "Edit Link",
+    "delete": "Delete Link",
+    "original_url": "Original URL",
+    "short_code": "Short Code",
+    "short_url": "Short URL",
+    "created_at": "Created At",
+    "copy": "Copy",
+    "visit": "Visit",
+    "copied": "Link copied to clipboard"
+  },
+  "form": {
+    "create_title": "Create New Link",
+    "create_description": "Create a new shortened link by entering the URL and a custom short code.",
+    "update_title": "Edit Link",
+    "update_description": "Update your shortened link details.",
+    "original_url": "Original URL",
+    "original_url_placeholder": "https://example.com/very-long-url",
+    "original_url_description": "The full URL you want to shorten",
+    "short_code": "Short Code",
+    "short_code_placeholder": "my-link",
+    "short_code_description": "A unique code for your shortened link",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "creating": "Creating...",
+    "updating": "Updating..."
+  },
+  "toast": {
+    "link_created": "Link created successfully",
+    "link_updated": "Link updated successfully",
+    "link_deleted": "Link deleted successfully",
+    "created_successfully": "Created successfully",
+    "updated_successfully": "Updated successfully",
+    "deleted_successfully": "Deleted successfully",
+    "error_occurred": "An error occurred"
+  },
+  "confirm": {
+    "delete_title": "Delete Link",
+    "delete_description": "Are you sure you want to delete this link? This action cannot be undone.",
+    "delete": "Delete",
+    "cancel": "Cancel"
+  },
+  "tooltip": {
+    "update": "Update",
+    "delete": "Delete",
+    "copy": "Copy",
+    "visit": "Visit"
+  },
+  "filter": {
+    "status": "Status",
+    "all": "All",
+    "active": "Active",
+    "inactive": "Inactive",
+    "archived": "Archived"
+  },
+  "validation": {
+    "url_required": "URL is required",
+    "url_invalid": "Must be a valid URL",
+    "shortcode_min": "Short code must be at least 3 characters",
+    "shortcode_max": "Short code must be less than 50 characters",
+    "shortcode_format": "Short code can only contain letters, numbers, hyphens, and underscores"
+  },
+  "home": {
+    "hero": {
+      "badge": "Fast, Simple, Powerful",
+      "title_line1": "Shorten Your Links,",
+      "title_line2": "Amplify Your Reach",
+      "description": "Transform long, complex URLs into short, memorable links. Track performance, manage your links, and grow your online presence with our powerful link shortener.",
+      "get_started": "Get Started Free"
+    },
+    "features": {
+      "badge": "Features",
+      "title": "Everything You Need to Succeed",
+      "description": "Powerful features designed to help you manage and optimize your links effectively.",
+      "feature1_title": "Instant Link Shortening",
+      "feature1_desc": "Convert long URLs into short, shareable links in seconds. Perfect for social media, emails, and anywhere space matters.",
+      "feature2_title": "Analytics & Insights",
+      "feature2_desc": "Track clicks, understand your audience, and measure the impact of your links with detailed analytics and reporting.",
+      "feature3_title": "Lightning Fast",
+      "feature3_desc": "Built with modern technology for blazing-fast performance. Your links work instantly, every time.",
+      "feature4_title": "Secure & Reliable",
+      "feature4_desc": "Enterprise-grade security ensures your links are safe. SSL encryption and 99.9% uptime guarantee.",
+      "feature5_title": "Custom Domains",
+      "feature5_desc": "Use your own domain for branded short links. Build trust and reinforce your brand identity.",
+      "feature6_title": "Easy Management",
+      "feature6_desc": "Organize, edit, and manage all your links from one intuitive dashboard. Find what you need, when you need it."
+    },
+    "how_it_works": {
+      "badge": "How It Works",
+      "title": "Simple, Fast, Effective",
+      "description": "Get started in three easy steps and start sharing your short links immediately.",
+      "step1_title": "Sign Up",
+      "step1_desc": "Create your free account in seconds. No credit card required.",
+      "step2_title": "Shorten",
+      "step2_desc": "Paste your long URL and get a short link instantly. Customize it if you want.",
+      "step3_title": "Share & Track",
+      "step3_desc": "Share your link anywhere and monitor its performance with real-time analytics."
+    },
+    "stats": {
+      "stat1_label": "Links Shortened",
+      "stat2_label": "Uptime Guarantee",
+      "stat3_label": "Average Response Time"
+    },
+    "cta": {
+      "title": "Ready to Get Started?",
+      "description": "Join thousands of users who trust our platform to manage their links. Start shortening your URLs for free today.",
+      "button": "Create Your Account"
+    },
+    "footer": {
+      "copyright": "© 2026 Link Shortener. All rights reserved."
+    }
+  }
+}

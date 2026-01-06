@@ -11,43 +11,38 @@ import { Link2, Zap, BarChart3, Shield, Globe, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 
-const features = [
+const getFeatures = (t: any) => [
   {
     icon: Link2,
-    title: "Instant Link Shortening",
-    description:
-      "Convert long URLs into short, shareable links in seconds. Perfect for social media, emails, and anywhere space matters.",
+    title: t("home.features.feature1_title"),
+    description: t("home.features.feature1_desc"),
   },
   {
     icon: BarChart3,
-    title: "Analytics & Insights",
-    description:
-      "Track clicks, understand your audience, and measure the impact of your links with detailed analytics and reporting.",
+    title: t("home.features.feature2_title"),
+    description: t("home.features.feature2_desc"),
   },
   {
     icon: Zap,
-    title: "Lightning Fast",
-    description:
-      "Built with modern technology for blazing-fast performance. Your links work instantly, every time.",
+    title: t("home.features.feature3_title"),
+    description: t("home.features.feature3_desc"),
   },
   {
     icon: Shield,
-    title: "Secure & Reliable",
-    description:
-      "Enterprise-grade security ensures your links are safe. SSL encryption and 99.9% uptime guarantee.",
+    title: t("home.features.feature4_title"),
+    description: t("home.features.feature4_desc"),
   },
   {
     icon: Globe,
-    title: "Custom Domains",
-    description:
-      "Use your own domain for branded short links. Build trust and reinforce your brand identity.",
+    title: t("home.features.feature5_title"),
+    description: t("home.features.feature5_desc"),
   },
   {
     icon: Sparkles,
-    title: "Easy Management",
-    description:
-      "Organize, edit, and manage all your links from one intuitive dashboard. Find what you need, when you need it.",
+    title: t("home.features.feature6_title"),
+    description: t("home.features.feature6_desc"),
   },
 ];
 
@@ -111,6 +106,8 @@ function FeatureCard({
 export function FeaturesSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { t } = useTranslation();
+  const features = getFeatures(t);
 
   return (
     <section id="features" className=" mx-auto px-4 py-20">
@@ -120,13 +117,12 @@ export function FeaturesSection() {
         animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
         transition={{ duration: 0.6 }}
         className="text-center space-y-4 mb-16">
-        <Badge variant="outline">Features</Badge>
+        <Badge variant="outline">{t("home.features.badge")}</Badge>
         <h2 className="text-3xl md:text-4xl font-bold">
-          Everything You Need to Succeed
+          {t("home.features.title")}
         </h2>
         <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-          Powerful features designed to help you manage and optimize your links
-          effectively.
+          {t("home.features.description")}
         </p>
       </motion.div>
 

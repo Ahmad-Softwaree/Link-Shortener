@@ -4,25 +4,23 @@ import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { useInView } from "framer-motion";
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 
-const steps = [
+const getSteps = (t: any) => [
   {
     number: 1,
-    title: "Sign Up",
-    description:
-      "Create your free account in seconds. No credit card required.",
+    title: t("home.how_it_works.step1_title"),
+    description: t("home.how_it_works.step1_desc"),
   },
   {
     number: 2,
-    title: "Shorten",
-    description:
-      "Paste your long URL and get a short link instantly. Customize it if you want.",
+    title: t("home.how_it_works.step2_title"),
+    description: t("home.how_it_works.step2_desc"),
   },
   {
     number: 3,
-    title: "Share & Track",
-    description:
-      "Share your link anywhere and monitor its performance with real-time analytics.",
+    title: t("home.how_it_works.step3_title"),
+    description: t("home.how_it_works.step3_desc"),
   },
 ];
 
@@ -74,6 +72,8 @@ function StepCard({
 export function HowItWorksSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { t } = useTranslation();
+  const steps = getSteps(t);
 
   return (
     <section className=" mx-auto px-4 py-20">
@@ -83,13 +83,12 @@ export function HowItWorksSection() {
         animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
         transition={{ duration: 0.6 }}
         className="text-center space-y-4 mb-16">
-        <Badge variant="outline">How It Works</Badge>
+        <Badge variant="outline">{t("home.how_it_works.badge")}</Badge>
         <h2 className="text-3xl md:text-4xl font-bold">
-          Simple, Fast, Effective
+          {t("home.how_it_works.title")}
         </h2>
         <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-          Get started in three easy steps and start sharing your short links
-          immediately.
+          {t("home.how_it_works.description")}
         </p>
       </motion.div>
 

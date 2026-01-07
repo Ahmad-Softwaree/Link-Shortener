@@ -16,7 +16,8 @@
   "header": {
     "sign_in": "چوونەژوورەوە",
     "sign_up": "دروستکردنی هەژمار",
-    "dashboard": "داشبۆرد"
+    "dashboard": "داشبۆرد",
+    "home": "سەرەکی"
   },
   "dashboard": {
     "title": "داشبۆرد",

@@ -1,6 +1,11 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
@@ -11,133 +16,112 @@ import {
   addLink,
   updateLink,
   deleteLink,
-  type PaginationResult,
-  type CRUDReturn,
-} from "../actions/links.action";
+} from "@/lib/react-query/actions/link.action";
 import type { QueryParam } from "@/types/global";
-import type { Link, NewLink } from "@/lib/db/schema";
-import { links } from "../keys";
+import type { NewLink } from "@/lib/db/schema";
+import { QUERY_KEYS } from "../keys";
 
-type UseGetLinksOptions = {
-  queries?: QueryParam;
-  enabled?: boolean;
+export const useGetLinks = (queryKey: [string, QueryParam]) => {
+  const [name, params] = queryKey;
+  return useInfiniteQuery({
+    queryKey: [name, params],
+    queryFn: ({ pageParam }) =>
+      getLinks(params, pageParam as number | undefined),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, _, lastPageParam) => {
+      return lastPage.hasMore ? lastPageParam + 1 : undefined;
+    },
+  });
 };
 
-export function useGetLinks({
-  queries,
-  enabled = true,
-}: UseGetLinksOptions = {}) {
+export const useGetLink = (id: number | null) => {
   const { userId } = useAuth();
 
   return useQuery({
-    queryKey: links.list(queries),
-    queryFn: (): Promise<PaginationResult<Link>> => getLinks(userId!, queries),
-    retry: 0,
-    enabled: !!userId && enabled,
+    queryKey: [QUERY_KEYS.LINK, id],
+    queryFn: () => getLink(id ?? 0, userId!),
+    enabled: !!id && !!userId,
   });
-}
-
-type UseGetLinkOptions = {
-  id: number;
-  enabled?: boolean;
 };
 
-export function useGetLink({ id, enabled = true }: UseGetLinkOptions) {
-  const { userId } = useAuth();
-
-  return useQuery({
-    queryKey: links.detail(id),
-    queryFn: (): Promise<Link | null> => getLink(id, userId!),
-    retry: 0,
-    enabled: !!userId && !!id && enabled,
-  });
-}
-
-type UseAddLinkOptions = {
-  closeTheModal?: boolean;
-  successMessage?: string;
-};
-
-export function useAddLink({
-  closeTheModal = true,
+export const useAddLink = ({
+  closeTheModal,
   successMessage,
-}: UseAddLinkOptions = {}) {
+}: {
+  closeTheModal?: () => void;
+  successMessage?: string;
+}) => {
+  const { t } = useTranslation();
   const { userId } = useAuth();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
   const { closeModal } = useModalStore();
 
   return useMutation({
-    mutationFn: async (form: Omit<NewLink, "userId">): Promise<CRUDReturn> =>
-      addLink(form, userId!),
-    onSuccess: ({ message }) => {
-      toast.success(successMessage || message || t("toast.link_created"));
-      if (closeTheModal) closeModal();
-      return queryClient.invalidateQueries({
-        queryKey: links.lists(),
-      });
+    mutationFn: (form: Omit<NewLink, "userId">) => addLink(form, userId!),
+    onSuccess: (data) => {
+      toast.success(successMessage || data.message || t("toast.link_created"));
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LINKS] });
+      closeModal();
+      closeTheModal?.();
     },
     onError: (error: Error) => {
       toast.error(error.message || t("toast.error_occurred"));
     },
   });
-}
-
-type UseUpdateLinkOptions = {
-  closeTheModal?: boolean;
-  successMessage?: string;
 };
 
-export function useUpdateLink({
-  closeTheModal = true,
+export const useUpdateLink = ({
+  closeTheModal,
   successMessage,
-}: UseUpdateLinkOptions = {}) {
+}: {
+  closeTheModal?: () => void;
+  successMessage?: string;
+}) => {
+  const { t } = useTranslation();
   const { userId } = useAuth();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
   const { closeModal } = useModalStore();
 
   return useMutation({
-    mutationFn: async ({
+    mutationFn: ({
       id,
       form,
     }: {
       id: number;
       form: Partial<Omit<NewLink, "userId">>;
-    }): Promise<CRUDReturn> => updateLink(id, form, userId!),
-    onSuccess: ({ message }) => {
-      toast.success(successMessage || message || t("toast.link_updated"));
-      if (closeTheModal) closeModal();
-      return queryClient.invalidateQueries({
-        queryKey: links.lists(),
-      });
+    }) => updateLink(id, form, userId!),
+    onSuccess: (data) => {
+      toast.success(successMessage || data.message || t("toast.link_updated"));
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LINKS] });
+      closeModal();
+      closeTheModal?.();
     },
     onError: (error: Error) => {
       toast.error(error.message || t("toast.error_occurred"));
     },
   });
-}
-
-type UseDeleteLinkOptions = {
-  successMessage?: string;
 };
 
-export function useDeleteLink({ successMessage }: UseDeleteLinkOptions = {}) {
+export const useDeleteLink = ({
+  closeTheModal,
+  successMessage,
+}: {
+  closeTheModal?: () => void;
+  successMessage?: string;
+}) => {
+  const { t } = useTranslation();
   const { userId } = useAuth();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
 
   return useMutation({
-    mutationFn: async (id: number): Promise<CRUDReturn> =>
-      deleteLink(id, userId!),
-    onSuccess: ({ message }) => {
-      toast.success(successMessage || message || t("toast.link_deleted"));
-      return queryClient.invalidateQueries({
-        queryKey: links.lists(),
-      });
+    mutationFn: (id: number) => deleteLink(id, userId!),
+    onSuccess: (data) => {
+      toast.success(successMessage || data.message || t("toast.link_deleted"));
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LINKS] });
+      closeTheModal?.();
     },
     onError: (error: Error) => {
       toast.error(error.message || t("toast.error_occurred"));
     },
   });
-}
+};

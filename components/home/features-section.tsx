@@ -8,10 +8,10 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link2, Zap, BarChart3, Shield, Globe, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
-import { useInView } from "framer-motion";
-import { useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { FadeInUpScroll, HoverLift } from "@/components/shared/animate";
+import { useRef } from "react";
+import { useInView, motion } from "framer-motion";
 
 const getFeatures = (t: any) => [
   {
@@ -75,31 +75,27 @@ function FeatureCard({
   description: string;
   index: number;
 }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 50 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      whileHover={{ y: -8, transition: { duration: 0.2 } }}>
-      <Card
-        className={`h-full hover:shadow-2xl transition-all duration-300 border hover:border-violet-200 dark:hover:border-violet-800 bg-gradient-to-br ${
-          gradients[index % gradients.length]
-        }`}>
-        <CardHeader>
-          <div className="mb-4 p-3 bg-background rounded-xl w-fit shadow-sm">
-            <Icon
-              className={`h-10 w-10 ${iconColors[index % iconColors.length]}`}
-            />
-          </div>
-          <CardTitle className="text-xl">{title}</CardTitle>
-          <CardDescription className="text-base">{description}</CardDescription>
-        </CardHeader>
-      </Card>
-    </motion.div>
+    <FadeInUpScroll delay={index * 0.1}>
+      <HoverLift>
+        <Card
+          className={`h-full hover:shadow-2xl transition-all duration-300 border hover:border-violet-200 dark:hover:border-violet-800 bg-gradient-to-br ${
+            gradients[index % gradients.length]
+          }`}>
+          <CardHeader>
+            <div className="mb-4 p-3 bg-background rounded-xl w-fit shadow-sm">
+              <Icon
+                className={`h-10 w-10 ${iconColors[index % iconColors.length]}`}
+              />
+            </div>
+            <CardTitle className="text-xl">{title}</CardTitle>
+            <CardDescription className="text-base">
+              {description}
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </HoverLift>
+    </FadeInUpScroll>
   );
 }
 

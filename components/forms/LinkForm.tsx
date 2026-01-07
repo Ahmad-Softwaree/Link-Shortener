@@ -19,7 +19,7 @@ import { getLinkValidation } from "@/validation/links";
 import {
   useAddLink,
   useUpdateLink,
-} from "@/lib/react-query/queries/links.query";
+} from "@/lib/react-query/queries/link.query";
 import { useModalStore } from "@/lib/store/modal.store";
 import type { GlobalFormProps } from "@/types/global";
 

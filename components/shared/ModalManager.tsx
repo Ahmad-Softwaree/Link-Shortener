@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useDeleteLink } from "@/lib/react-query/queries/links.query";
+import { useDeleteLink } from "@/lib/react-query/queries/link.query";
 
 export function ModalManager() {
   const { modal, closeModal, modalData } = useModalStore();

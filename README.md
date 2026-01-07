@@ -6,11 +6,11 @@ A modern, full-stack link shortening application built with the latest web techn
 
 ### Home Page
 
-![Home Page](screenshots/home.png)
+![Home Page](public/images/screenshots/home.png)
 
 ### Dashboard
 
-![Dashboard](screenshots/dashboard.png)
+![Dashboard](public/images/screenshots/dashboard.png)
 
 ## 🎯 Project Overview
 

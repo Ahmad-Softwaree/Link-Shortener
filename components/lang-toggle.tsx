@@ -6,8 +6,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { setCookie } from "@/lib/config/cookie.config";
 import { ENUMs } from "@/lib/enums";
-import { ChevronDown, Languages } from "lucide-react";
+import { Languages } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Button } from "./ui/button";
+
 export const setLanguage = (selectedLang: string) => {
   setCookie(ENUMs.GLOBAL.LANG_COOKIE, selectedLang);
   document.body.classList.remove("english_font", "arabic_font", "kurdish_font");
@@ -33,15 +35,14 @@ export function LangToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <div className="flex flex-row justify-center items-center gap-1 cursor-pointer hover:text-cta transition-colors duration-200">
-          <Languages className="w-5 lg:w-6" />
-          <small className="font-light hidden md:block english_font">
-            {i18n.t(`langs_codes.${i18n.language}` as any)}
-          </small>
-          <ChevronDown className="w-3 hidden md:block" />
-        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors">
+          <Languages className="h-5 w-5" />
+        </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="space-y-1 z-[1200] relative" align="end">
+      <DropdownMenuContent className="z-[1200]" align="end">
         {(i18n.options.resources
           ? Object.keys(i18n.options.resources)
           : []

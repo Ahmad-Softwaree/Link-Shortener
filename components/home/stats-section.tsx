@@ -1,8 +1,9 @@
 "use client";
 
-import { motion, useInView, useMotionValue, useSpring } from "framer-motion";
+import { useMotionValue, useSpring, useInView } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { ScaleInScroll, HoverScale } from "@/components/shared/animate";
 
 function AnimatedNumber({
   value,
@@ -78,9 +79,6 @@ function StatCard({
   label: string;
   index: number;
 }) {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-
   const statGradients = [
     "from-violet-600 to-indigo-600 dark:from-violet-400 dark:to-indigo-400",
     "from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400",
@@ -88,20 +86,16 @@ function StatCard({
   ];
 
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, scale: 0.5 }}
-      animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.5 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      whileHover={{ scale: 1.05 }}
-      className="space-y-2 p-6 rounded-2xl bg-gradient-to-br from-background to-muted border border-border hover:border-violet-200 dark:hover:border-violet-800 transition-all duration-300 shadow-sm hover:shadow-lg">
-      <div
-        className={`english_font text-4xl md:text-5xl font-bold bg-gradient-to-r ${statGradients[index]} bg-clip-text text-transparent`}>
-        {prefix}
-        <AnimatedNumber value={value} suffix={suffix} />
-      </div>
-      <p className="text-muted-foreground font-medium">{label}</p>
-    </motion.div>
+    <ScaleInScroll delay={index * 0.1}>
+      <HoverScale className="space-y-2 p-6 rounded-2xl bg-gradient-to-br from-background to-muted border border-border hover:border-violet-200 dark:hover:border-violet-800 transition-all duration-300 shadow-sm hover:shadow-lg">
+        <div
+          className={`english_font text-4xl md:text-5xl font-bold bg-gradient-to-r ${statGradients[index]} bg-clip-text text-transparent`}>
+          {prefix}
+          <AnimatedNumber value={value} suffix={suffix} />
+        </div>
+        <p className="text-muted-foreground font-medium">{label}</p>
+      </HoverScale>
+    </ScaleInScroll>
   );
 }
 

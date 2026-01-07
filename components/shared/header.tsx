@@ -8,8 +8,9 @@ import {
   UserButton,
 } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { Link2, Menu, X } from "lucide-react";
+import { Link2, Menu, X, Home } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import { ModeToggle } from "@/components/mode-toggle";
 import { LangToggle } from "@/components/lang-toggle";
@@ -18,10 +19,12 @@ import { useState } from "react";
 export function Header() {
   const { t } = useTranslation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const isDashboard = pathname?.startsWith("/dashboard");
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-lg border-b border-border/40 shadow-sm">
-      <div className="px-4">
+      <div>
         <div className="flex justify-between items-center py-4">
           <Link href="/" className="flex items-center gap-2 group">
             <div className="p-2 bg-gradient-to-br from-violet-600 to-indigo-600 rounded-lg shadow-md group-hover:shadow-lg group-hover:shadow-violet-500/50 transition-all duration-300">
@@ -52,12 +55,24 @@ export function Header() {
             </SignedOut>
 
             <SignedIn>
-              <Button
-                variant="ghost"
-                asChild
-                className="hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors">
-                <Link href="/dashboard">{t("header.dashboard")}</Link>
-              </Button>
+              {isDashboard ? (
+                <Button
+                  variant="ghost"
+                  asChild
+                  className="hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors">
+                  <Link href="/">
+                    <Home className="mr-2 h-4 w-4" />
+                    {t("header.home")}
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  asChild
+                  className="hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors">
+                  <Link href="/dashboard">{t("header.dashboard")}</Link>
+                </Button>
+              )}
               <UserButton />
             </SignedIn>
           </div>
@@ -102,13 +117,26 @@ export function Header() {
 
             <SignedIn>
               <div className="flex flex-col gap-2 items-center">
-                <Button
-                  variant="ghost"
-                  asChild
-                  className="w-full hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors"
-                  onClick={() => setMobileMenuOpen(false)}>
-                  <Link href="/dashboard">{t("header.dashboard")}</Link>
-                </Button>
+                {isDashboard ? (
+                  <Button
+                    variant="ghost"
+                    asChild
+                    className="w-full hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}>
+                    <Link href="/">
+                      <Home className="mr-2 h-4 w-4" />
+                      {t("header.home")}
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    asChild
+                    className="w-full hover:bg-violet-50 dark:hover:bg-violet-950/30 transition-colors"
+                    onClick={() => setMobileMenuOpen(false)}>
+                    <Link href="/dashboard">{t("header.dashboard")}</Link>
+                  </Button>
+                )}
                 <UserButton />
               </div>
             </SignedIn>

@@ -1,77 +1,83 @@
 "use client";
 
-import React from "react";
-import { DataTypes } from "@/types/global";
-import NoData from "../shared/NoData";
+import React, { useEffect, useMemo, useRef } from "react";
+import { DataTypes, PaginationProps } from "@/types/global";
 import { PaginationControls } from "../shared/PaginationControls";
-import type { UseQueryResult } from "@tanstack/react-query";
-import type { PaginationResult } from "@/lib/react-query/actions/links.action";
-
-interface DataBoxProps<T> {
-  Component: React.ComponentType<T>;
-  queryFn: () => UseQueryResult<PaginationResult<T>>;
-  onPageChange: (page: number) => void;
-  onLimitChange: (limit: number) => void;
-  currentPage: number;
-  limit: number;
-}
+import { useTranslation } from "react-i18next";
+import { useAppQueryParams } from "@/hooks/useAppQuery";
+import { QueryParam } from "@/types/types";
+import Loading from "../shared/Loading";
+import NoData from "../shared/NoData";
 
 export function DataBox<T extends DataTypes>({
   queryFn,
+  name,
   Component,
-  onPageChange,
-  onLimitChange,
-  currentPage,
-  limit,
-}: DataBoxProps<T>) {
-  const { data, isLoading } = queryFn();
+}: PaginationProps & {
+  Component: React.ComponentType<T>;
+}) {
+  const { i18n } = useTranslation();
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  const items = data?.data || [];
-  const total = data?.total || 0;
-  const totalPages = Math.ceil(total / limit);
+  const { queries } = useAppQueryParams();
+  const queryKey = useMemo(
+    () => [name, { ...queries }] as [string, QueryParam],
+    [name, queries]
+  );
+
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = queryFn(queryKey);
+  useEffect(() => {
+    refetch();
+  }, [i18n.language]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1 }
+    );
+
+    const node = loadMoreRef.current;
+    if (node) observer.observe(node);
+
+    return () => {
+      if (node) observer.unobserve(node);
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   if (isLoading) {
-    return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="h-48 bg-muted rounded-lg animate-pulse" />
-        ))}
-      </div>
-    );
+    return <Loading.Cards />;
   }
 
-  if (items.length === 0) {
+  const allItems =
+    data?.pages?.flatMap((page: { data: T[] }) => page.data) ?? [];
+  if (allItems.length === 0) {
     return <NoData />;
   }
 
   return (
     <div className="w-full space-y-4">
-      {total > 0 && (
-        <PaginationControls
-          currentPage={currentPage}
-          totalPages={totalPages}
-          limit={limit}
-          total={total}
-          onPageChange={onPageChange}
-          onLimitChange={onLimitChange}
-        />
-      )}
-
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {items.map((val: T, i: number) => (
+        {allItems.map((val: T, i: number) => (
           <Component key={i} {...val} />
         ))}
       </div>
 
-      {total > 0 && (
-        <PaginationControls
-          currentPage={currentPage}
-          totalPages={totalPages}
-          limit={limit}
-          total={total}
-          onPageChange={onPageChange}
-          onLimitChange={onLimitChange}
-        />
+      {data.total > 0 && (
+        <PaginationControls totalPages={data.totalPages} total={data.total} />
       )}
     </div>
   );

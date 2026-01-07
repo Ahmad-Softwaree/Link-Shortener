@@ -6,7 +6,7 @@ import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { Link2, Github, Globe } from "lucide-react";
-import { SignInButton, SignUpButton } from "@clerk/nextjs";
+import { SignInButton, SignUpButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 
 export function Footer() {
@@ -42,20 +42,31 @@ export function Footer() {
               {t("home.footer.quick_links")}
             </h3>
             <div className="flex flex-col gap-2">
-              <SignInButton mode="modal">
-                <Button
-                  variant="link"
-                  className="justify-start p-0 h-auto text-muted-foreground hover:text-violet-600">
-                  {t("header.sign_in")}
-                </Button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <Button
-                  variant="link"
-                  className="justify-start p-0 h-auto text-muted-foreground hover:text-violet-600">
-                  {t("header.sign_up")}
-                </Button>
-              </SignUpButton>
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <Button
+                    variant="link"
+                    className="justify-start p-0 h-auto text-muted-foreground hover:text-violet-600">
+                    {t("header.sign_in")}
+                  </Button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <Button
+                    variant="link"
+                    className="justify-start p-0 h-auto text-muted-foreground hover:text-violet-600">
+                    {t("header.sign_up")}
+                  </Button>
+                </SignUpButton>
+              </SignedOut>
+              <SignedIn>
+                <Link href="/dashboard">
+                  <Button
+                    variant="link"
+                    className="justify-start p-0 h-auto text-muted-foreground hover:text-violet-600">
+                    {t("header.dashboard")}
+                  </Button>
+                </Link>
+              </SignedIn>
             </div>
           </div>
 

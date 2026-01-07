@@ -16,28 +16,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAppQueryParams } from "@/hooks/useAppQuery";
 import { useTranslation } from "react-i18next";
 
 type PaginationControlsProps = {
-  currentPage: number;
   totalPages: number;
-  limit: number;
   total: number;
-  onPageChange: (page: number) => void;
-  onLimitChange: (limit: number) => void;
 };
 
 const LIMIT_OPTIONS = [50, 100, 150, 200];
 
 export function PaginationControls({
-  currentPage,
   totalPages,
-  limit,
   total,
-  onPageChange,
-  onLimitChange,
 }: PaginationControlsProps) {
   const { t } = useTranslation();
+  const { queries, setQueries } = useAppQueryParams();
+  const currentPage = (queries.page as number) - 1 || 0;
+  const limit = Number(queries.limit) || 100;
+
+  const onPageChange = (page: number) => {
+    setQueries({ page: page + 1 });
+  };
+  const onLimitChange = (limit: number) => {
+    setQueries({ limit, page: 1 });
+  };
 
   const startItem = currentPage * limit + 1;
   const endItem = Math.min((currentPage + 1) * limit, total);

@@ -41,7 +41,7 @@ components/
     NoData.tsx                  # Empty state component
     QueryErrorBoundary.tsx      # Error boundary for queries
   cards/
-    LinkCard.Simple.tsx         # Card component for displaying items
+    LinkCard.tsx                # Card component for displaying items
 
 hooks/
   useAppQuery.tsx               # Custom hook for URL params (nuqs)
@@ -70,7 +70,7 @@ import { DataTypes } from "@/types/global";
 import NoData from "../shared/NoData";
 import { PaginationControls } from "../shared/PaginationControls";
 import type { UseQueryResult } from "@tanstack/react-query";
-import type { PaginationResult } from "@/lib/react-query/actions/links.action";
+import type { PaginationResult } from "@/lib/react-query/actions/link.action";
 
 interface DataBoxProps<T> {
   Component: React.ComponentType<T>;
@@ -422,8 +422,8 @@ export const setLimitCookie = (limit: number): void => {
 import Page from "@/containers/Page";
 import { DataBox } from "@/components/table/data-box";
 import type { Link } from "@/lib/db/schema";
-import { SimpleLinkCard } from "@/components/cards/LinkCard.Simple";
-import { useGetLinks } from "@/lib/react-query/queries/links.query";
+import { LinkCard } from "@/components/cards/LinkCard";
+import { useGetLinks } from "@/lib/react-query/queries/link.query";
 import { useAppQueryParams } from "@/hooks/useAppQuery";
 import { QueryErrorBoundary } from "@/components/shared/QueryErrorBoundary";
 

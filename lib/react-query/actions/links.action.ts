@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { links, type Link, type NewLink } from "@/lib/db/schema";
 import { eq, ilike, or, and, desc, sql } from "drizzle-orm";
 import type { QueryParam } from "@/types/global";
-import { auth } from "@clerk/nextjs/server";
 
 export type CRUDReturn = { message: string; data?: any };
 
@@ -16,6 +15,7 @@ export type PaginationResult<T> = {
 };
 
 export const getLinks = async (
+  userId: string,
   queries?: QueryParam,
   page: number = 1
 ): Promise<PaginationResult<Link>> => {
@@ -24,8 +24,6 @@ export const getLinks = async (
     const limit = Number(queries?.limit) || 100;
     const search = (queries?.search as string) || "";
     const offset = pageNumber * limit;
-    let currentUser = auth();
-    let userId = (await currentUser).userId || "";
 
     const whereConditions: any[] = [eq(links.userId, userId)];
 

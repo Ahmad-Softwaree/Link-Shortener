@@ -21,9 +21,9 @@ lib/
   react-query/
     keys.ts                    # Centralized query keys for all tables
     actions/
-      [table-name].action.ts   # Server actions per table (e.g., links.action.ts)
+      [table-name].action.ts   # Server actions per table (e.g., link.action.ts)
     queries/
-      [table-name].query.ts    # React Query hooks per table (e.g., links.query.ts)
+      [table-name].query.ts    # React Query hooks per table (e.g., link.query.ts)
 ```
 
 ### File Creation Rules
@@ -296,7 +296,7 @@ import {
   deleteLink,
   type PaginationResult,
   type CRUDReturn,
-} from "../actions/links.action";
+} from "../actions/link.action";
 import type { QueryParam } from "@/types/global";
 import type { Link, NewLink } from "@/lib/db/schema";
 import { links } from "../keys";
@@ -524,7 +524,7 @@ const handleLimitChange = (limit: number) => {
 
 ## 🎯 Complete Example
 
-### links.action.ts
+### link.action.ts
 
 ```typescript
 "use server";
@@ -619,7 +619,7 @@ export const addLink = async (
 };
 ```
 
-### links.query.ts
+### link.query.ts
 
 ```typescript
 "use client";
@@ -634,7 +634,7 @@ import {
   addLink,
   type PaginationResult,
   type CRUDReturn,
-} from "../actions/links.action";
+} from "../actions/link.action";
 import type { Link, NewLink } from "@/lib/db/schema";
 import { links } from "../keys";
 

@@ -8,15 +8,11 @@ import { ExternalLink, Copy, Trash2, Calendar, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { useModalStore } from "@/lib/store/modal.store";
-import { useDeleteLink } from "@/lib/react-query/queries/links.query";
+import { useDeleteLink } from "@/lib/react-query/queries/link.query";
 import ActionTooltip from "@/components/shared/ActionTooltip";
 import { formatDate } from "@/lib/functions";
 
-interface LinkCardProps {
-  link: Link;
-}
-
-export function LinkCard({ link }: LinkCardProps) {
+export function LinkCard(val: Link) {
   const { t } = useTranslation();
   const { openModal } = useModalStore();
   const deleteMutation = useDeleteLink({
@@ -25,7 +21,7 @@ export function LinkCard({ link }: LinkCardProps) {
 
   const shortUrl = `${
     process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
-  }/l/${link.shortCode}`;
+  }/l/${val.shortCode}`;
 
   const handleCopy = async () => {
     try {
@@ -39,15 +35,15 @@ export function LinkCard({ link }: LinkCardProps) {
   const handleEdit = () => {
     openModal({
       type: "update",
-      modalData: link,
+      modalData: val,
     });
   };
 
   const handleDelete = () => {
     openModal({
       type: "delete",
-      id: link.id,
-      modalData: link,
+      id: val.id,
+      modalData: val,
     });
   };
 
@@ -56,13 +52,13 @@ export function LinkCard({ link }: LinkCardProps) {
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="english_font text-lg font-semibold break-all text-foreground group-hover:text-primary transition-colors">
-            /{link.shortCode}
+            /{val.shortCode}
           </CardTitle>
           <Badge
             variant="secondary"
             className="shrink-0 shadow-sm english_font flex items-center gap-1 px-2 py-1">
             <Calendar className="mr-1 h-3 w-3" />
-            {formatDate(link.createdAt)}
+            {formatDate(val.createdAt)}
           </Badge>
         </div>
       </CardHeader>
@@ -72,7 +68,7 @@ export function LinkCard({ link }: LinkCardProps) {
             {t("link.original_url")}
           </p>
           <p className="text-sm break-all line-clamp-2 text-foreground/90 english_font">
-            {link.originalUrl}
+            {val.originalUrl}
           </p>
         </div>
 

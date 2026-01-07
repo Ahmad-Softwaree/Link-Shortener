@@ -119,7 +119,7 @@ export function useAppQueryParams() {
 "use client";
 
 import { useAppQueryParams } from "@/hooks/useAppQuery";
-import { useGetLinks } from "@/lib/react-query/queries/links.query";
+import { useGetLinks } from "@/lib/react-query/queries/link.query";
 import { DataBox } from "@/components/table/data-box";
 
 export default function DashboardPage() {
@@ -191,7 +191,7 @@ export function SearchBar() {
 ### Pattern 3: Integration with React Query
 
 ```typescript
-// lib/react-query/queries/links.query.ts
+// lib/react-query/queries/link.query.ts
 export function useGetLinks({
   queries,
   enabled = true,
@@ -216,7 +216,7 @@ export function useGetLinks({
 ### Pattern 4: Server Action Integration
 
 ```typescript
-// lib/react-query/actions/links.action.ts
+// lib/react-query/actions/link.action.ts
 export const getLinks = async (
   userId: string,
   queries?: QueryParam
@@ -469,7 +469,7 @@ export type QueryParam = {
 ### 4. Update Server Action
 
 ```typescript
-// lib/react-query/actions/links.action.ts
+// lib/react-query/actions/link.action.ts
 export const getLinks = async (
   userId: string,
   queries?: QueryParam

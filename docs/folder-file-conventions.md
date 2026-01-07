@@ -69,7 +69,6 @@ components/
 │   └── [Entity]Form.tsx
 ├── cards/               # Card components
 │   ├── LinkCard.tsx
-│   ├── LinkCard.Simple.tsx
 │   └── [Entity]Card.tsx
 ├── table/               # Table-related components
 │   └── data-box.tsx
@@ -83,15 +82,14 @@ components/
 
 **Naming Rules**:
 
-| Type              | Pattern                      | Example                               |
-| ----------------- | ---------------------------- | ------------------------------------- |
-| UI Components     | `lowercase-kebab.tsx`        | `button.tsx`, `card.tsx`              |
-| Shared Components | `PascalCase.tsx`             | `Modal.tsx`, `AddButton.tsx`          |
-| Forms             | `[Entity]Form.tsx`           | `LinkForm.tsx`, `UserForm.tsx`        |
-| Cards             | `[Entity]Card.tsx`           | `LinkCard.tsx`                        |
-| Card Variants     | `[Entity]Card.[Variant].tsx` | `LinkCard.Simple.tsx`                 |
-| Sections          | `[name]-section.tsx`         | `hero-section.tsx`, `cta-section.tsx` |
-| Toggles/Utils     | `[name]-toggle.tsx`          | `mode-toggle.tsx`, `lang-toggle.tsx`  |
+| Type              | Pattern               | Example                               |
+| ----------------- | --------------------- | ------------------------------------- |
+| UI Components     | `lowercase-kebab.tsx` | `button.tsx`, `card.tsx`              |
+| Shared Components | `PascalCase.tsx`      | `Modal.tsx`, `AddButton.tsx`          |
+| Forms             | `[Entity]Form.tsx`    | `LinkForm.tsx`, `UserForm.tsx`        |
+| Cards             | `[Entity]Card.tsx`    | `LinkCard.tsx`                        |
+| Sections          | `[name]-section.tsx`  | `hero-section.tsx`, `cta-section.tsx` |
+| Toggles/Utils     | `[name]-toggle.tsx`   | `mode-toggle.tsx`, `lang-toggle.tsx`  |
 
 **Key Principles**:
 
@@ -182,8 +180,8 @@ lib/
 | --------- | --------------------- | ------------------------------------------ |
 | Config    | `[name].config.ts`    | `cookie.config.ts`, `pagination.config.ts` |
 | Store     | `[name].store.ts`     | `modal.store.ts`, `filter.store.ts`        |
-| Actions   | `[entity].action.ts`  | `links.action.ts`, `users.action.ts`       |
-| Queries   | `[entity].query.ts`   | `links.query.ts`, `users.query.ts`         |
+| Actions   | `[entity].action.ts`  | `link.action.ts`, `user.action.ts`         |
+| Queries   | `[entity].query.ts`   | `link.query.ts`, `user.query.ts`           |
 | Utils     | `[purpose].ts`        | `utils.ts`, `functions.ts`                 |
 | Constants | `[type]s.ts` (plural) | `urls.ts`, `enums.ts`                      |
 | Keys      | `keys.ts`             | `keys.ts` (for query keys)                 |
@@ -293,8 +291,8 @@ docs/
 | Utility function         | `.ts`     | `[purpose].ts`        | `utils.ts`, `functions.ts` |
 | Configuration            | `.ts`     | `[name].config.ts`    | `cookie.config.ts`         |
 | Store                    | `.ts`     | `[name].store.ts`     | `modal.store.ts`           |
-| Action                   | `.ts`     | `[entity].action.ts`  | `links.action.ts`          |
-| Query                    | `.ts`     | `[entity].query.ts`   | `links.query.ts`           |
+| Action                   | `.ts`     | `[entity].action.ts`  | `link.action.ts`           |
+| Query                    | `.ts`     | `[entity].query.ts`   | `link.query.ts`            |
 | Validation               | `.ts`     | `[entity].ts`         | `links.ts`                 |
 | Types (ambient)          | `.d.ts`   | `[name].d.ts`         | `global.d.ts`              |
 | Constants                | `.ts`     | `[type]s.ts`          | `urls.ts`, `enums.ts`      |

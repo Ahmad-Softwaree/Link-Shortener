@@ -39,9 +39,9 @@ lib/
 ├── react-query/
 │   ├── keys.ts                  # Centralized query keys
 │   ├── actions/
-│   │   └── links.action.ts      # Server actions for links table
+│   │   └── link.action.ts      # Server actions for links table
 │   └── queries/
-│       └── links.query.ts       # React Query hooks for links
+│       └── link.query.ts       # React Query hooks for links
 ├── db/
 │   ├── index.ts                 # Drizzle db instance
 │   └── schema.ts                # Database schema definitions
@@ -85,7 +85,7 @@ queryKey: links.list({ page: 0, search: "test" });
 queryClient.invalidateQueries({ queryKey: links.lists() });
 ```
 
-## 🔧 Step 2: Server Actions (`/lib/react-query/actions/links.action.ts`)
+## 🔧 Step 2: Server Actions (`/lib/react-query/actions/link.action.ts`)
 
 ### File Header
 
@@ -297,7 +297,7 @@ export const deleteLink = async (
 3. ✅ **Check if deleted** (record found and authorized)
 4. ✅ **Throw error** if not found/unauthorized
 
-## 🎣 Step 3: React Query Hooks (`/lib/react-query/queries/links.query.ts`)
+## 🎣 Step 3: React Query Hooks (`/lib/react-query/queries/link.query.ts`)
 
 ### File Header
 
@@ -317,7 +317,7 @@ import {
   deleteLink,
   type PaginationResult,
   type CRUDReturn,
-} from "../actions/links.action";
+} from "../actions/link.action";
 import type { QueryParam } from "@/types/global";
 import type { Link, NewLink } from "@/lib/db/schema";
 import { links } from "../keys";
@@ -529,10 +529,10 @@ export function useAppQueryParams() {
 // app/dashboard/page.tsx
 "use client";
 
-import { useGetLinks } from "@/lib/react-query/queries/links.query";
+import { useGetLinks } from "@/lib/react-query/queries/link.query";
 import { useAppQueryParams } from "@/hooks/useAppQuery";
 import { DataBox } from "@/components/table/data-box";
-import { SimpleLinkCard } from "@/components/cards/LinkCard.Simple";
+import { LinkCard } from "@/components/cards/LinkCard";
 
 export default function DashboardPage() {
   const { queries, setQueries, setLimit } = useAppQueryParams();

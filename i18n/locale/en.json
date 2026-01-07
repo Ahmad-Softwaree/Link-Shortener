@@ -16,7 +16,8 @@
   "header": {
     "sign_in": "Sign In",
     "sign_up": "Sign Up",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "home": "Home"
   },
   "dashboard": {
     "title": "Dashboard",

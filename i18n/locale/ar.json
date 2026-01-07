@@ -16,7 +16,8 @@
   "header": {
     "sign_in": "تسجيل الدخول",
     "sign_up": "إنشاء حساب",
-    "dashboard": "لوحة التحكم"
+    "dashboard": "لوحة التحكم",
+    "home": "الرئيسية"
   },
   "dashboard": {
     "title": "لوحة التحكم",
